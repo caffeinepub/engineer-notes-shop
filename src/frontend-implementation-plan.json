@@ -1,62 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Deployment retry helper and actionable failure reporting (frontend-only)",
-  "requirements": [
-    {
-      "id": "REQ-19",
-      "summary": "Add a developer-facing deployment retry helper that provides a clear, copyable retry command and consistent local log capture instructions.",
-      "acceptanceCriteria": [
-        "A new deployment attempt is executed for the current codebase without requiring code changes from the user.",
-        "If the deployment succeeds, the app is reachable and the canister(s) install without errors."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/RequestUpdateModal.tsx",
-          "operation": "modify",
-          "description": "Extend the existing modal with a new “Deployment Helper” section that (a) presents a copy-to-clipboard “retry deployment” command for the current revision, and (b) links users to paste the resulting output into the modal for analysis. Keep all user-facing text in English."
-        },
-        {
-          "path": "frontend/src/components/Footer.tsx",
-          "operation": "modify",
-          "description": "Adjust the existing footer button label/description text (without redesign) so it is clear that the modal can be used for deployment retry guidance and failure reporting, while preserving the current navigation and layout."
-        },
-        {
-          "path": "frontend/src/utils/deploymentCommands.ts",
-          "operation": "create",
-          "description": "Provide a small utility that returns the recommended retry command(s) as plain strings (e.g., for local CLI usage) so the UI can render and copy them consistently."
-        }
-      ]
-    },
-    {
-      "id": "REQ-20",
-      "summary": "Add an actionable deployment failure report UI that structures pasted deployment output into failing step + full underlying error text, and suggests minimal fixes.",
-      "acceptanceCriteria": [
-        "The failure report includes: (1) the exact step that failed (e.g., build, bundle, canister install), and (2) the full underlying error text.",
-        "A concrete fix is identified and specified (code/config change) that can be implemented to make deployment succeed on the next attempt."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/RequestUpdateModal.tsx",
-          "operation": "modify",
-          "description": "Add a “Deployment Failure Report” area to the modal: a textarea for pasting full deployment output, a ‘Generate report’ action, and a read-only report view that surfaces (1) detected failing step and (2) full underlying error text (verbatim). Include a copy button to copy the structured report for developers. Keep all user-facing text in English."
-        },
-        {
-          "path": "frontend/src/utils/deploymentLogParser.ts",
-          "operation": "create",
-          "description": "Implement frontend-side parsing of pasted deployment output into a structured object: detected step (build/bundle/install/unknown), extracted error block, and original raw text for full-fidelity display/copy."
-        },
-        {
-          "path": "frontend/src/utils/deploymentFixSuggester.ts",
-          "operation": "create",
-          "description": "Implement a minimal heuristic-based suggester that maps common build/deploy error patterns found in the pasted output to a concrete proposed fix (code/config change) and a short rationale; return both the suggestion and the exact snippet/instruction text for the modal to display."
-        },
-        {
-          "path": "frontend/src/utils/formatDeploymentReport.ts",
-          "operation": "create",
-          "description": "Create a small formatter that turns the parsed result + fix suggestion into a developer-actionable report text, ensuring it includes the failing step and the full underlying error output."
-        }
-      ]
-    }
-  ]
+  "title": "Retry deployment (no frontend changes required)",
+  "requirements": []
 }

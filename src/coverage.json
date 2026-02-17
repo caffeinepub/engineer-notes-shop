@@ -1,61 +1,20 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T22:52:54.225Z",
+  "generatedAt": "2026-02-17T23:44:30.496Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
-    "items": [
-      {
-        "id": "REQ-19",
-        "summary": "Retry the packaging/build and deployment to the Internet Computer network for the current project revision.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/RequestUpdateModal.tsx",
-          "frontend/src/components/Footer.tsx",
-          "frontend/src/utils/deploymentCommands.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/RequestUpdateModal.tsx",
-          "frontend/src/components/Footer.tsx",
-          "frontend/src/utils/deploymentCommands.ts"
-        ]
-      },
-      {
-        "id": "REQ-20",
-        "summary": "If the retry deployment fails again, capture and surface the full deployment error output (including the failing step and the underlying error message) in a way that a developer can act on, and propose the minimal code/config change needed to make the next deployment succeed.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/RequestUpdateModal.tsx",
-          "frontend/src/utils/deploymentLogParser.ts",
-          "frontend/src/utils/deploymentFixSuggester.ts",
-          "frontend/src/utils/formatDeploymentReport.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/RequestUpdateModal.tsx",
-          "frontend/src/utils/deploymentLogParser.ts",
-          "frontend/src/utils/deploymentFixSuggester.ts",
-          "frontend/src/utils/formatDeploymentReport.ts"
-        ]
-      }
-    ]
+    "total": 0,
+    "implemented": 0,
+    "items": []
   },
   "changedFiles": [
-    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/Footer.tsx",
-    "frontend/src/components/RequestUpdateModal.tsx",
-    "frontend/src/utils/deploymentCommands.ts",
-    "frontend/src/utils/deploymentFixSuggester.ts",
-    "frontend/src/utils/deploymentLogParser.ts",
-    "frontend/src/utils/formatDeploymentReport.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

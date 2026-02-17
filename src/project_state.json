@@ -1,12 +1,14 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 11,
+  "projectStateVersion": 17,
   "summary": "App to sell the user's engineering books and notes via a simple storefront with upload/listing, pricing, and purchasing.",
   "architectural_notes": [],
   "known_issues": [
-    "Deployment failed during packaging/push to the network; user requested a retry."
+    "Deployment failed during packaging/push to the network; user requested a retry.",
+    "Admin/Product upload button is not available in the UI; needs to be enabled so the owner can upload product files.",
+    "Admin/Product upload button still not available in the UI after the attempted deployment/build; fix not taking effect (possible build/deploy mismatch or UI condition/role gating issue)."
   ],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-create-a-public-storefront-ui-that-lists-all-published-products-with-search-and-basic-filters-e-g-type-book-note-and-a-product-detail-page-with-description-price-and-a-clear-purchase-action",
@@ -125,6 +127,38 @@
       "title": "If the retry deployment fails again, capture and surface the full deployment error output (including the failing step and the underlying error message) in a way that a developer can act on, and propose the minimal code/config change needed to make the next deployment succeed.",
       "reqIds": [
         "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-admin-dashboard-product-file-upload-control-so-that-an-admin-always-has-an-available-clickable-upload-or-upload-pdf-button-for-each-product-and-selecting-a-pdf-reliably-triggers-the-upload-flow",
+      "title": "Fix the Admin Dashboard product file upload control so that an admin always has an available, clickable \"Upload\" (or \"Upload PDF\") button for each product, and selecting a PDF reliably triggers the upload flow.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-admin-dashboard-always-renders-a-visible-clickable-upload-pdf-button-for-every-product-card-regardless-of-product-status-draft-published-and-whether-a-file-is-already-uploaded-and-ensure-it-is-only-disabled-during-an-active-upload-for-that-specific-product",
+      "title": "Ensure the Admin Dashboard always renders a visible, clickable \"Upload PDF\" button for every product card, regardless of product status (draft/published) and whether a file is already uploaded, and ensure it is only disabled during an active upload for that specific product.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-explicit-user-facing-diagnostics-on-the-admin-dashboard-when-the-upload-action-is-not-usable-due-to-authorization-or-data-loading-errors-e-g-admin-check-fails-admin-product-list-fails-so-the-user-understands-why-they-cannot-upload-and-what-to-do-next",
+      "title": "Add explicit, user-facing diagnostics on the Admin Dashboard when the upload action is not usable due to authorization or data-loading errors (e.g., admin check fails, admin product list fails), so the user understands why they cannot upload and what to do next.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-verify-the-upload-control-wiring-end-to-end-from-ui-interaction-to-backend-call-selecting-a-pdf-from-the-upload-pdf-button-must-trigger-the-upload-mutation-and-show-progress-and-on-success-the-product-s-file-status-must-update-to-uploaded-without-requiring-a-hard-refresh",
+      "title": "Verify the upload control wiring end-to-end from UI interaction to backend call: selecting a PDF from the \"Upload PDF\" button must trigger the upload mutation and show progress, and on success the product’s file status must update to \"Uploaded\" without requiring a hard refresh.",
+      "reqIds": [
+        "REQ-24"
       ],
       "version": 1
     }

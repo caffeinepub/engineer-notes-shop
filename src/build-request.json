@@ -1,59 +1,30 @@
 {
   "kind": "build_request",
-  "title": "Retry failed deployment and make deployment failures actionable",
+  "title": "Retry deployment",
   "projectName": "Engineer Notes Shop",
-  "priority": "high",
-  "requirements": [
-    {
-      "id": "REQ-19",
-      "text": "Retry the packaging/build and deployment to the Internet Computer network for the current project revision.",
-      "target": "unknown",
-      "source": {
-        "messageIds": [
-          "msg-2",
-          "msg-3"
-        ],
-        "quotes": [
-          "Deployment failed",
-          "Retry"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A new deployment attempt is executed for the current codebase without requiring code changes from the user.",
-        "If the deployment succeeds, the app is reachable and the canister(s) install without errors."
-      ]
-    },
-    {
-      "id": "REQ-20",
-      "text": "If the retry deployment fails again, capture and surface the full deployment error output (including the failing step and the underlying error message) in a way that a developer can act on, and propose the minimal code/config change needed to make the next deployment succeed.",
-      "target": "unknown",
-      "source": {
-        "messageIds": [
-          "msg-2",
-          "msg-3"
-        ],
-        "quotes": [
-          "Deployment failed",
-          "Retry"
-        ]
-      },
-      "acceptanceCriteria": [
-        "The failure report includes: (1) the exact step that failed (e.g., build, bundle, canister install), and (2) the full underlying error text.",
-        "A concrete fix is identified and specified (code/config change) that can be implemented to make deployment succeed on the next attempt."
-      ]
-    }
-  ],
+  "priority": "normal",
+  "requirements": [],
   "constraints": [
-    "Use English for any user-facing text.",
-    "Respect the existing single-actor Motoko backend architecture (all Motoko logic in backend/main.mo); only add backend/migration.mo if an upgrade requires it.",
-    "Do not edit files under frontend/src/components/ui or any other frontend immutable paths listed in SYSTEM_CONTEXT."
+    "Backend must remain a single Motoko actor in backend/main.mo; add backend/migration.mo only if an upgrade requires state migration.",
+    "Do not edit any frontend files under frontend/src/components/ui or any paths listed in frontend.immutablePaths (compose/read-only components instead).",
+    "Use English for any user-facing text."
   ],
   "nonGoals": [
-    "Adding new product/storefront features beyond what already exists.",
-    "UI redesign or new marketing assets as part of this retry unless required to fix the deployment."
+    "Implement new product, purchase, entitlement, or upload features unrelated to deployment retry.",
+    "Change authentication approach (Internet Identity only)."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

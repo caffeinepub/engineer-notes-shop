@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useIsCallerAdmin, useGetAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useSetProductPublished, useUploadProductFile } from '../hooks/useQueries';
 import AccessDeniedScreen from '../components/AccessDeniedScreen';
+import ProductFileUploadButton from '../components/admin/ProductFileUploadButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,11 +10,16 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { LayoutDashboard, Plus, Edit, Trash2, Upload, Loader2, Eye, EyeOff } from 'lucide-react';
+import { LayoutDashboard, Plus, Edit, Trash2, Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { ExternalBlob } from '../backend';
 import type { Product } from '../backend';
 import { Progress } from '@/components/ui/progress';
+
+interface UploadState {
+  isUploading: boolean;
+  progress: number;
+}
 
 export default function AdminDashboardPage() {
   const { identity } = useInternetIdentity();
@@ -23,8 +29,7 @@ export default function AdminDashboardPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
-  const [uploadingProductId, setUploadingProductId] = useState<string | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStates, setUploadStates] = useState<Record<string, UploadState>>({});
 
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
@@ -117,14 +122,19 @@ export default function AdminDashboardPage() {
   };
 
   const handleFileUpload = async (productId: string, file: File) => {
-    setUploadingProductId(productId);
-    setUploadProgress(0);
+    setUploadStates(prev => ({
+      ...prev,
+      [productId]: { isUploading: true, progress: 0 }
+    }));
     
     try {
       const arrayBuffer = await file.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
       const blob = ExternalBlob.fromBytes(uint8Array).withUploadProgress((percentage) => {
-        setUploadProgress(percentage);
+        setUploadStates(prev => ({
+          ...prev,
+          [productId]: { isUploading: true, progress: percentage }
+        }));
       });
       
       await uploadFile.mutateAsync({ id: productId, blob });
@@ -132,8 +142,11 @@ export default function AdminDashboardPage() {
     } catch (error: any) {
       toast.error(error.message || 'Failed to upload file');
     } finally {
-      setUploadingProductId(null);
-      setUploadProgress(0);
+      setUploadStates(prev => {
+        const newStates = { ...prev };
+        delete newStates[productId];
+        return newStates;
+      });
     }
   };
 
@@ -177,102 +190,91 @@ export default function AdminDashboardPage() {
         </Card>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.map((product) => (
-            <Card key={product.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-lg line-clamp-2">{product.title}</CardTitle>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleTogglePublish(product)}
-                      disabled={setPublished.isPending}
-                    >
-                      {product.isPublished ? (
-                        <Eye className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">by {product.author}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Price:</span>
-                    <span className="font-semibold">
-                      ${(Number(product.priceInCents) / 100).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Status:</span>
-                    <span className={product.isPublished ? 'text-green-600' : 'text-muted-foreground'}>
-                      {product.isPublished ? 'Published' : 'Draft'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">File:</span>
-                    <span className={product.file ? 'text-green-600' : 'text-muted-foreground'}>
-                      {product.file ? 'Uploaded' : 'Not uploaded'}
-                    </span>
-                  </div>
-                  
-                  {uploadingProductId === product.id && (
-                    <div className="space-y-2">
-                      <Progress value={uploadProgress} />
-                      <p className="text-xs text-muted-foreground text-center">
-                        Uploading... {uploadProgress}%
-                      </p>
+          {products.map((product) => {
+            const uploadState = uploadStates[product.id];
+            const isUploading = uploadState?.isUploading || false;
+            const uploadProgress = uploadState?.progress || 0;
+
+            return (
+              <Card key={product.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between gap-2">
+                    <CardTitle className="text-lg line-clamp-2">{product.title}</CardTitle>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleTogglePublish(product)}
+                        disabled={setPublished.isPending}
+                      >
+                        {product.isPublished ? (
+                          <Eye className="h-4 w-4 text-green-600" />
+                        ) : (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openEditDialog(product)}
-                  className="flex-1"
-                >
-                  <Edit className="h-4 w-4 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.accept = '.pdf';
-                    input.onchange = (e) => {
-                      const file = (e.target as HTMLInputElement).files?.[0];
-                      if (file) handleFileUpload(product.id, file);
-                    };
-                    input.click();
-                  }}
-                  disabled={uploadingProductId === product.id}
-                  className="flex-1"
-                >
-                  {uploadingProductId === product.id ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Upload className="h-4 w-4 mr-1" />
-                  )}
-                  Upload
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDeletingProduct(product)}
-                >
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">by {product.author}</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Price:</span>
+                      <span className="font-semibold">
+                        ${(Number(product.priceInCents) / 100).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Status:</span>
+                      <span className={product.isPublished ? 'text-green-600' : 'text-muted-foreground'}>
+                        {product.isPublished ? 'Published' : 'Draft'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">File:</span>
+                      <span className={product.file ? 'text-green-600' : 'text-muted-foreground'}>
+                        {product.file ? 'Uploaded' : 'Not uploaded'}
+                      </span>
+                    </div>
+                    
+                    {isUploading && (
+                      <div className="space-y-2">
+                        <Progress value={uploadProgress} />
+                        <p className="text-xs text-muted-foreground text-center">
+                          Uploading... {uploadProgress}%
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEditDialog(product)}
+                    className="flex-1 min-w-[80px]"
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  <ProductFileUploadButton
+                    onFileSelected={(file) => handleFileUpload(product.id, file)}
+                    disabled={isUploading}
+                    isLoading={isUploading}
+                    className="flex-1 min-w-[120px]"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDeletingProduct(product)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
       )}
 
