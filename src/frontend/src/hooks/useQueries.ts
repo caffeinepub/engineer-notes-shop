@@ -10,6 +10,8 @@ const KEYS = {
   userRole: ['currentUserRole'],
   isAdmin: ['isAdmin'],
   storefrontProducts: ['storefrontProducts'],
+  adminProducts: ['adminProducts'],
+  purchasedProductIds: ['purchasedProductIds'],
   product: (id: string) => ['product', id],
 };
 
@@ -75,7 +77,7 @@ export function useIsCallerAdmin() {
   });
 }
 
-// Product Hooks
+// Product Hooks - Public Storefront (published only)
 export function useListStorefrontProducts() {
   const { actor, isFetching } = useActor();
 
@@ -84,6 +86,20 @@ export function useListStorefrontProducts() {
     queryFn: async () => {
       if (!actor) return [];
       return actor.listStorefrontProducts();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// Admin Product Hooks - All products (including drafts)
+export function useGetAdminProducts() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Product[]>({
+    queryKey: KEYS.adminProducts,
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getProducts();
     },
     enabled: !!actor && !isFetching,
   });
@@ -113,6 +129,7 @@ export function useCreateProduct() {
       return actor.createProduct(params.id, params.title, params.author, params.priceInCents);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.storefrontProducts });
     },
   });
@@ -128,6 +145,7 @@ export function useUpdateProduct() {
       return actor.updateProduct(params.id, params.title, params.author, params.priceInCents);
     },
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.storefrontProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.product(variables.id) });
     },
@@ -144,6 +162,7 @@ export function useDeleteProduct() {
       return actor.deleteProduct(id);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.storefrontProducts });
     },
   });
@@ -159,6 +178,7 @@ export function useSetProductPublished() {
       return actor.setProductPublished(params.id, params.isPublished);
     },
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.storefrontProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.product(variables.id) });
     },
@@ -175,13 +195,54 @@ export function useUploadProductFile() {
       return actor.uploadProductFile(params.id, params.blob);
     },
     onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.storefrontProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.product(variables.id) });
     },
   });
 }
 
-// Purchase & Download
+// Purchase & Entitlements
+export function useGetPurchasedProductIds() {
+  const { actor, isFetching } = useActor();
+  const { identity } = useInternetIdentity();
+
+  return useQuery<string[]>({
+    queryKey: KEYS.purchasedProductIds,
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getPurchasedProductIds();
+    },
+    enabled: !!actor && !isFetching && !!identity,
+  });
+}
+
+export function useGetPurchasedProducts() {
+  const { actor, isFetching } = useActor();
+  const { data: purchasedIds, isLoading: idsLoading } = useGetPurchasedProductIds();
+
+  return useQuery<Product[]>({
+    queryKey: ['purchasedProducts', purchasedIds],
+    queryFn: async () => {
+      if (!actor || !purchasedIds || purchasedIds.length === 0) return [];
+      
+      const products = await Promise.all(
+        purchasedIds.map(async (id) => {
+          try {
+            return await actor.getProduct(id);
+          } catch (error) {
+            console.error(`Failed to fetch product ${id}:`, error);
+            return null;
+          }
+        })
+      );
+      
+      return products.filter((p): p is Product => p !== null);
+    },
+    enabled: !!actor && !isFetching && !idsLoading && !!purchasedIds,
+  });
+}
+
 export function usePurchaseProduct() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
@@ -191,9 +252,9 @@ export function usePurchaseProduct() {
       if (!actor) throw new Error('Actor not available');
       return actor.purchaseProduct(productId);
     },
-    onSuccess: (_, productId) => {
-      queryClient.invalidateQueries({ queryKey: KEYS.storefrontProducts });
-      queryClient.invalidateQueries({ queryKey: KEYS.product(productId) });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: KEYS.purchasedProductIds });
+      queryClient.invalidateQueries({ queryKey: ['purchasedProducts'] });
     },
   });
 }

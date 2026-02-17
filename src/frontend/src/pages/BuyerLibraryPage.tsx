@@ -1,20 +1,22 @@
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useListStorefrontProducts, useDownloadProductFile } from '../hooks/useQueries';
+import { useGetPurchasedProducts, useDownloadProductFile } from '../hooks/useQueries';
 import AccessDeniedScreen from '../components/AccessDeniedScreen';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Download, Library, AlertCircle, Loader2 } from 'lucide-react';
+import { Download, Library, AlertCircle, Loader2, ShoppingBag } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 
 export default function BuyerLibraryPage() {
   const { identity } = useInternetIdentity();
+  const navigate = useNavigate();
   const isAuthenticated = !!identity;
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const { data: allProducts, isLoading } = useListStorefrontProducts();
+  const { data: purchasedProducts, isLoading } = useGetPurchasedProducts();
   const downloadFile = useDownloadProductFile();
 
   if (!isAuthenticated) {
@@ -36,8 +38,12 @@ export default function BuyerLibraryPage() {
       
       toast.success('Download started!');
     } catch (error: any) {
-      if (error.message?.includes('Must purchase')) {
-        toast.error('You need to purchase this product first');
+      const errorMessage = error.message || '';
+      
+      if (errorMessage.includes('Product file not available')) {
+        toast.error('Product file not available. Please contact support.');
+      } else if (errorMessage.includes('Must purchase') || errorMessage.includes('Unauthorized')) {
+        toast.error('You need to purchase this product first.');
       } else {
         toast.error('Download failed. Please try again.');
       }
@@ -69,17 +75,25 @@ export default function BuyerLibraryPage() {
         </div>
       </div>
 
-      {!allProducts || allProducts.length === 0 ? (
+      {!purchasedProducts || purchasedProducts.length === 0 ? (
         <Alert>
-          <AlertCircle className="h-4 w-4" />
+          <ShoppingBag className="h-4 w-4" />
           <AlertTitle>No purchases yet</AlertTitle>
-          <AlertDescription>
-            Visit the storefront to browse and purchase engineering resources.
+          <AlertDescription className="space-y-3">
+            <p>Visit the storefront to browse and purchase engineering resources.</p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate({ to: '/' })}
+              className="mt-2"
+            >
+              Browse Storefront
+            </Button>
           </AlertDescription>
         </Alert>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {allProducts.map((product) => (
+          {purchasedProducts.map((product) => (
             <Card key={product.id} className="flex flex-col">
               <CardHeader>
                 <CardTitle className="text-lg line-clamp-2">{product.title}</CardTitle>

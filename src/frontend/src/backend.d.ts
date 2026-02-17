@@ -36,14 +36,17 @@ export interface backendInterface {
     createProduct(id: string, title: string, author: string, priceInCents: bigint): Promise<void>;
     deleteProduct(id: string): Promise<void>;
     downloadProductFile(productId: string): Promise<ExternalBlob>;
+    getAllUserProfiles(): Promise<Array<[Principal, UserProfile]>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getProduct(productId: string): Promise<Product>;
+    getProducts(): Promise<Array<Product>>;
+    getPurchasedProductIds(): Promise<Array<string>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     listStorefrontProducts(): Promise<ProductList>;
     purchaseProduct(productId: string): Promise<void>;
-    saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    saveCallerUserProfile(userProfile: UserProfile): Promise<UserProfile>;
     setProductPublished(id: string, isPublished: boolean): Promise<void>;
     updateProduct(id: string, title: string, author: string, priceInCents: bigint): Promise<void>;
     uploadProductFile(id: string, blob: ExternalBlob): Promise<void>;

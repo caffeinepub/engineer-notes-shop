@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useIsCallerAdmin, useListStorefrontProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useSetProductPublished, useUploadProductFile } from '../hooks/useQueries';
+import { useIsCallerAdmin, useGetAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useSetProductPublished, useUploadProductFile } from '../hooks/useQueries';
 import AccessDeniedScreen from '../components/AccessDeniedScreen';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -19,7 +18,7 @@ import { Progress } from '@/components/ui/progress';
 export default function AdminDashboardPage() {
   const { identity } = useInternetIdentity();
   const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
-  const { data: products, isLoading: productsLoading } = useListStorefrontProducts();
+  const { data: products, isLoading: productsLoading } = useGetAdminProducts();
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -306,7 +305,7 @@ export default function AdminDashboardPage() {
                   id="title"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Engineering Fundamentals"
+                  placeholder="Product title"
                   required
                 />
               </div>
@@ -316,7 +315,7 @@ export default function AdminDashboardPage() {
                   id="author"
                   value={formData.author}
                   onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                  placeholder="John Doe"
+                  placeholder="Author name"
                   required
                 />
               </div>
@@ -329,7 +328,7 @@ export default function AdminDashboardPage() {
                   min="0"
                   value={formData.priceInCents}
                   onChange={(e) => setFormData({ ...formData, priceInCents: e.target.value })}
-                  placeholder="29.99"
+                  placeholder="9.99"
                   required
                 />
               </div>
@@ -349,7 +348,7 @@ export default function AdminDashboardPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deletingProduct} onOpenChange={(open) => !open && setDeletingProduct(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, MessageSquarePlus } from 'lucide-react';
+import { Heart, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import RequestUpdateModal from './RequestUpdateModal';
 
@@ -21,8 +21,8 @@ export default function Footer() {
                 onClick={() => setIsModalOpen(true)}
                 className="text-muted-foreground hover:text-foreground"
               >
-                <MessageSquarePlus className="h-4 w-4 mr-2" />
-                Request an Update
+                <Wrench className="h-4 w-4 mr-2" />
+                Developer Tools
               </Button>
             </div>
             <div className="flex items-center gap-1.5">

@@ -1,9 +1,11 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 5,
+  "projectStateVersion": 11,
   "summary": "App to sell the user's engineering books and notes via a simple storefront with upload/listing, pricing, and purchasing.",
   "architectural_notes": [],
-  "known_issues": [],
+  "known_issues": [
+    "Deployment failed during packaging/push to the network; user requested a retry."
+  ],
   "isFixRequest": false,
   "existing_features": [
     {
@@ -69,6 +71,62 @@
         "REQ-12"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-the-frontend-data-hooks-and-pages-so-that-the-admin-dashboard-lists-all-products-including-drafts-for-management-and-file-uploads-while-the-public-storefront-continues-to-show-only-published-products",
+      "title": "Update the frontend data hooks and pages so that the Admin Dashboard lists all products (including drafts) for management and file uploads, while the public Storefront continues to show only published products.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-buyer-library-ui-to-list-only-products-the-signed-in-user-has-purchased-and-ensure-each-listed-item-s-download-action-successfully-downloads-the-associated-uploaded-product-file-or-shows-a-clear-error-if-no-file-is-available",
+      "title": "Update the Buyer Library UI to list only products the signed-in user has purchased, and ensure each listed item’s download action successfully downloads the associated uploaded product file (or shows a clear error if no file is available).",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-admin-dashboard-ui-to-include-a-clear-prominent-getting-started-set-of-action-buttons-that-guides-the-owner-through-the-sequence-create-product-upload-pdf-set-price-publish-using-explicit-button-labels-not-icon-only-controls-and-short-helper-text",
+      "title": "Update the Admin Dashboard UI to include a clear, prominent “Getting started” set of action buttons that guides the owner through the sequence: Create Product → Upload PDF → Set Price → Publish, using explicit button labels (not icon-only controls) and short helper text.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-improve-the-per-product-action-controls-on-the-admin-dashboard-so-the-owner-can-clearly-see-and-execute-the-key-actions-for-selling-upload-pdf-edit-including-price-and-publish-unpublish-with-consistent-button-labeling-and-visibility",
+      "title": "Improve the per-product action controls on the Admin Dashboard so the owner can clearly see and execute the key actions for selling: Upload PDF, Edit (including price), and Publish/Unpublish, with consistent button labeling and visibility.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-admin-only-call-to-action-on-the-public-storefront-page-that-clearly-directs-the-owner-to-the-admin-dashboard-for-uploading-and-publishing-products",
+      "title": "Add an admin-only call-to-action on the public storefront page that clearly directs the owner to the Admin Dashboard for uploading and publishing products.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-retry-the-packaging-build-and-deployment-to-the-internet-computer-network-for-the-current-project-revision",
+      "title": "Retry the packaging/build and deployment to the Internet Computer network for the current project revision.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-if-the-retry-deployment-fails-again-capture-and-surface-the-full-deployment-error-output-including-the-failing-step-and-the-underlying-error-message-in-a-way-that-a-developer-can-act-on-and-propose-the-minimal-code-config-change-needed-to-make-the-next-deployment-succeed",
+      "title": "If the retry deployment fails again, capture and surface the full deployment error output (including the failing step and the underlying error message) in a way that a developer can act on, and propose the minimal code/config change needed to make the next deployment succeed.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -108,6 +166,20 @@
       "reqIds": [
         "REQ-4"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Add backend APIs to support (a) an admin-only product list that includes draft/unpublished products, and (b) an authenticated user’s purchased product IDs (or purchased products list) so the frontend can show a correct buyer library.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Add clearer, more prominent UI buttons to guide the owner through uploading notes and selling them (e.g., Admin Dashboard: Create Product, Upload File, Set Price, Publish; plus clearer navigation to Storefront/Library).",
+      "reqIds": [],
       "status": "pending"
     }
   ],

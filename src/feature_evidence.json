@@ -2,11 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-a-clear-in-app-way-for-the-user-to-specify-what-they-want-to-update-by-adding-a-simple-request-an-update-action-in-the-ui-e-g-in-the-footer-or-header-that-opens-a-modal-with-a-freeform-text-field-and-a-copy-to-clipboard-button-so-the-user-can-share-exact-update-instructions",
-      "featureTitle": "Add a clear in-app way for the user to specify what they want to update by adding a simple \"Request an update\" action in the UI (e.g., in the footer or header) that opens a modal with a freeform text field and a \"Copy to clipboard\" button so the user can share exact update instructions.",
+      "featureId": "feature-retry-the-packaging-build-and-deployment-to-the-internet-computer-network-for-the-current-project-revision",
+      "featureTitle": "Retry the packaging/build and deployment to the Internet Computer network for the current project revision.",
       "files": [
         "frontend/src/components/Footer.tsx",
-        "frontend/src/components/RequestUpdateModal.tsx"
+        "frontend/src/components/RequestUpdateModal.tsx",
+        "frontend/src/utils/deploymentCommands.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -18,7 +19,30 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-12"
+        "REQ-19"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-if-the-retry-deployment-fails-again-capture-and-surface-the-full-deployment-error-output-including-the-failing-step-and-the-underlying-error-message-in-a-way-that-a-developer-can-act-on-and-propose-the-minimal-code-config-change-needed-to-make-the-next-deployment-succeed",
+      "featureTitle": "If the retry deployment fails again, capture and surface the full deployment error output (including the failing step and the underlying error message) in a way that a developer can act on, and propose the minimal code/config change needed to make the next deployment succeed.",
+      "files": [
+        "frontend/src/components/RequestUpdateModal.tsx",
+        "frontend/src/utils/deploymentFixSuggester.ts",
+        "frontend/src/utils/deploymentLogParser.ts",
+        "frontend/src/utils/formatDeploymentReport.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-20"
       ],
       "confidence": "high"
     }
