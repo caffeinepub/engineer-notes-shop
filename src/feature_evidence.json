@@ -1,0 +1,26 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-add-a-clear-in-app-way-for-the-user-to-specify-what-they-want-to-update-by-adding-a-simple-request-an-update-action-in-the-ui-e-g-in-the-footer-or-header-that-opens-a-modal-with-a-freeform-text-field-and-a-copy-to-clipboard-button-so-the-user-can-share-exact-update-instructions",
+      "featureTitle": "Add a clear in-app way for the user to specify what they want to update by adding a simple \"Request an update\" action in the UI (e.g., in the footer or header) that opens a modal with a freeform text field and a \"Copy to clipboard\" button so the user can share exact update instructions.",
+      "files": [
+        "frontend/src/components/Footer.tsx",
+        "frontend/src/components/RequestUpdateModal.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-12"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

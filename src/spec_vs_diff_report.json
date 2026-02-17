@@ -1,0 +1,23 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-17T22:17:51.665Z",
+  "summary": "REQ-12 appears implemented: a visible \"Request an Update\" action was added to the main layout footer, opening a modal with a multiline text field, copy-to-clipboard behavior, and success/error toasts. One additional, unrequested change was introduced in the footer attribution link (UTM tracking / hostname-based parameter).",
+  "missing_requirements": [],
+  "hallucinated_features": [
+    {
+      "description": "Added/modified caffeine.ai footer attribution link to include UTM tracking parameters derived from the current hostname.",
+      "reason": "BuildRequest only asked for a \"Request an update\" UI action and modal behavior; it did not request marketing/referral tracking changes.",
+      "evidence": [
+        "frontend/src/components/Footer.tsx (appIdentifier derived from window.location.hostname; href adds utm_source/utm_medium/utm_content)"
+      ]
+    }
+  ],
+  "confidence": 0.78,
+  "changed_files": [
+    "frontend-file-summaries.txt",
+    "frontend/src/components/Footer.tsx",
+    "frontend/src/components/RequestUpdateModal.tsx",
+    "project_state.json"
+  ]
+}

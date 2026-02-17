@@ -1,0 +1,20 @@
+{
+  "frontend/src/index.css": "Global styles with OKLCH color system for light/dark modes, custom typography settings, and utility classes for consistent spacing and card hover effects across the technical editorial theme.",
+  "frontend/src/App.tsx": "Main application component with TanStack Router setup, defining routes for storefront, product detail, admin dashboard, and buyer library, wrapped with ThemeProvider and Toaster for notifications.",
+  "frontend/src/components/Layout.tsx": "Root layout component that wraps all pages with consistent header (BrandHeader) and footer structure.",
+  "frontend/src/components/BrandHeader.tsx": "Sticky header with logo, navigation links (Storefront, Library, Admin), user profile display, and login button with role-aware visibility.",
+  "frontend/src/components/Footer.tsx": "Footer component with copyright notice, \"Request an Update\" button that opens RequestUpdateModal, and caffeine.ai attribution link with UTM tracking.",
+  "frontend/src/components/LoginButton.tsx": "Authentication button that handles Internet Identity login/logout with loading states and query cache clearing on logout.",
+  "frontend/src/components/ProfileSetupModal.tsx": "Modal dialog that prompts authenticated users to enter their name on first login, preventing dismissal until profile is saved.",
+  "frontend/src/components/AccessDeniedScreen.tsx": "Full-page component displaying access denied message with icon and return-to-storefront button for unauthorized access attempts.",
+  "frontend/src/components/StorefrontHero.tsx": "Hero section for the storefront page featuring headline, description, and generated hero banner image in a responsive grid layout.",
+  "frontend/src/components/SearchAndFilterBar.tsx": "Search input component with icon for filtering products by title or author in the storefront.",
+  "frontend/src/components/ProductCard.tsx": "Reusable product card component displaying title, author, price, type badge, and view details button with hover effects.",
+  "frontend/src/pages/StorefrontPage.tsx": "Main storefront page with hero section, search/filter bar, product grid, loading states, and profile setup modal for new users.",
+  "frontend/src/pages/ProductDetailPage.tsx": "Product detail page showing full product information, pricing, purchase button with authentication check, and success/error handling.",
+  "frontend/src/pages/BuyerLibraryPage.tsx": "Authenticated user library page listing purchased products with download buttons, progress indicators, and access control.",
+  "frontend/src/pages/AdminDashboardPage.tsx": "Admin-only dashboard for managing products with create/edit/delete operations, file upload with progress tracking, and publish/unpublish toggles.",
+  "frontend/src/hooks/useQueries.ts": "Centralized React Query hooks for all backend operations including authentication, product management, purchases, and downloads with proper cache invalidation.",
+  "frontend/tailwind.config.js": "Tailwind configuration with custom color tokens, typography, border radius, and animation settings for the technical editorial design system.",
+  "frontend/src/components/RequestUpdateModal.tsx": "Modal component with a multiline textarea for update instructions, copy-to-clipboard button with toast notifications, and close button using shadcn Dialog."
+}

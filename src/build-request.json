@@ -1,0 +1,51 @@
+{
+  "kind": "build_request",
+  "title": "Clarify requested update scope",
+  "projectName": "Engineer Notes Shop",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-12",
+      "text": "Add a clear in-app way for the user to specify what they want to update by adding a simple \"Request an update\" action in the UI (e.g., in the footer or header) that opens a modal with a freeform text field and a \"Copy to clipboard\" button so the user can share exact update instructions.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-messages-6"
+        ],
+        "quotes": [
+          "Update"
+        ]
+      },
+      "acceptanceCriteria": [
+        "There is a visible \"Request an update\" action accessible from the main layout (header or footer).",
+        "Clicking the action opens a modal containing: (1) a multiline text input, (2) a \"Copy to clipboard\" button, and (3) a \"Close\" button.",
+        "The \"Copy to clipboard\" button copies the modal text content to the clipboard and shows a success toast; failures show an error toast.",
+        "All user-facing text is in English."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single Motoko actor in backend/main.mo; only add migration.mo if state schema changes require it.",
+    "Do not edit frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui (compose existing components instead)."
+  ],
+  "nonGoals": [
+    "Do not add new product, purchase, entitlement, or file-storage functionality (already implemented).",
+    "Do not add any third-party integrations (email, chat, ticketing, analytics)."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [
+      "Use English for all user-facing text."
+    ],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
+  }
+}

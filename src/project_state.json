@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 5,
+  "summary": "App to sell the user's engineering books and notes via a simple storefront with upload/listing, pricing, and purchasing.",
+  "architectural_notes": [],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-create-a-public-storefront-ui-that-lists-all-published-products-with-search-and-basic-filters-e-g-type-book-note-and-a-product-detail-page-with-description-price-and-a-clear-purchase-action",
+      "title": "Create a public storefront UI that lists all published products with search and basic filters (e.g., type: book/note), and a product detail page with description, price, and a clear purchase action.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-authentication-in-the-ui-using-internet-identity-showing-different-navigation-actions-for-a-public-visitors-b-signed-in-buyers-purchases-downloads-and-c-owner-admin-manage-products",
+      "title": "Add authentication in the UI using Internet Identity, showing different navigation/actions for: (a) public visitors, (b) signed-in buyers (purchases/downloads), and (c) owner/admin (manage products).",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-an-admin-dashboard-ui-for-the-owner-to-manage-products-create-product-edit-fields-title-description-type-price-currency-publish-unpublish-delete-and-upload-replace-the-associated-file",
+      "title": "Create an admin dashboard UI for the owner to manage products: create product, edit fields (title/description/type/price/currency), publish/unpublish, delete, and upload/replace the associated file.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-buyer-library-ui-for-signed-in-users-that-lists-purchased-products-and-provides-a-download-button-for-each-purchased-item",
+      "title": "Create a buyer library UI for signed-in users that lists purchased products and provides a download button for each purchased item.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-use-react-query-for-all-backend-calls-products-purchases-entitlements-with-loading-error-states-and-optimistic-or-refetch-behavior-where-appropriate-after-mutations-create-update-publish-purchase-upload",
+      "title": "Use React Query for all backend calls (products, purchases, entitlements) with loading/error states and optimistic or refetch behavior where appropriate after mutations (create/update/publish/purchase/upload).",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-coherent-visual-theme-for-the-app-colors-typography-spacing-and-components-with-a-clean-technical-editorial-style-suitable-for-engineering-materials-enforce-the-theme-consistently-across-storefront-product-pages-admin-dashboard-and-buyer-library",
+      "title": "Apply a coherent visual theme for the app (colors, typography, spacing, and components) with a clean, technical editorial style suitable for engineering materials; enforce the theme consistently across storefront, product pages, admin dashboard, and buyer library.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-generate-and-include-static-marketing-brand-images-for-the-storefront-logo-and-a-hero-banner-illustration-and-render-them-from-frontend-static-assets",
+      "title": "Generate and include static marketing/brand images for the storefront (logo and a hero/banner illustration) and render them from frontend static assets.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-clear-in-app-way-for-the-user-to-specify-what-they-want-to-update-by-adding-a-simple-request-an-update-action-in-the-ui-e-g-in-the-footer-or-header-that-opens-a-modal-with-a-freeform-text-field-and-a-copy-to-clipboard-button-so-the-user-can-share-exact-update-instructions",
+      "title": "Add a clear in-app way for the user to specify what they want to update by adding a simple \"Request an update\" action in the UI (e.g., in the footer or header) that opens a modal with a freeform text field and a \"Copy to clipboard\" button so the user can share exact update instructions.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Build a storefront app to upload engineering books/notes, set prices, and allow visitors to purchase/download.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Implement backend data models and APIs to manage digital products (engineering books and notes), including: create/update/delete product, list products for storefront, get product details, and store pricing and publication status (draft/published).",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Add backend support for uploading and downloading the actual digital files for each product (e.g., PDF), and restrict file access so only the owner (admin) can upload/replace files, while buyers can download only after purchase entitlement is granted.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Implement backend purchase flow and entitlements: allow an authenticated user to create a purchase record for a product at the current price, and grant that user an entitlement that unlocks the download for that product.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Implement an owner/admin role based on a single configured owner principal (the canister controller/installer by default) to control product management actions (create/update/delete/publish and file upload).",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Engineer Notes Shop",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

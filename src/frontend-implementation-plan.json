@@ -1,0 +1,29 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Engineer Notes Shop — Request an update modal",
+  "requirements": [
+    {
+      "id": "REQ-12",
+      "summary": "Add a global \"Request an update\" action in the main layout that opens a modal with freeform instructions and a copy-to-clipboard flow with success/error toasts.",
+      "acceptanceCriteria": [
+        "There is a visible \"Request an update\" action accessible from the main layout (header or footer).",
+        "Clicking the action opens a modal containing: (1) a multiline text input, (2) a \"Copy to clipboard\" button, and (3) a \"Close\" button.",
+        "The \"Copy to clipboard\" button copies the modal text content to the clipboard and shows a success toast; failures show an error toast.",
+        "All user-facing text is in English."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/RequestUpdateModal.tsx",
+          "operation": "create",
+          "description": "Create a reusable RequestUpdateModal component that uses the shadcn-ui Dialog component to render a modal containing: a multiline text field for update instructions, a \"Copy to clipboard\" button that uses the browser clipboard API, and a \"Close\" button. Use Sonner to show a success toast on copy success and an error toast on failure. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/Footer.tsx",
+          "operation": "modify",
+          "description": "Add a visible \"Request an update\" action in the footer (main layout) that opens/closes RequestUpdateModal (state managed in Footer). Ensure the modal includes the required controls and all user-facing text remains in English. Verify the component's usage instructions before implementing."
+        }
+      ]
+    }
+  ]
+}
