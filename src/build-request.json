@@ -1,83 +1,76 @@
 {
   "kind": "build_request",
-  "title": "Fix owner access auto-assignment for authenticated Google user",
+  "title": "Fix admin authentication - backend owner recognition issue",
   "projectName": "Engineer Notes Shop",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the backend auto-owner assignment logic so that the authenticated principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' (shrirangatre@gmail.com) is correctly granted owner/admin access when they are the first authenticated user",
+      "text": "Fix the backend admin check logic so that the authenticated principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' is correctly recognized as admin after system initialization",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1",
-          "msg-2",
-          "msg-3"
+          "msg-user-1",
+          "msg-assistant-5",
+          "msg-user-6"
         ],
         "quotes": [
-          "Owner access not available to shrirangatre@gmail.com",
-          "Admin Check: ✗ Not admin",
-          "Access Denied - You do not have permission to access the admin dashboard"
+          "Admin Check: Not admin ✗",
+          "your principal is not being recognized as the owner"
         ]
       },
       "acceptanceCriteria": [
-        "When the user with principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' logs in, the Admin Diagnostics panel shows 'Admin Check: ✓ Admin' instead of '✗ Not admin'",
-        "The Access Denied screen no longer appears when this authenticated user navigates to the admin dashboard",
-        "The admin system correctly recognizes this principal as the owner upon first authentication",
-        "The 'Initialize as Owner' button either works correctly or is removed if auto-assignment is functioning"
+        "After refresh, the Admin Diagnostics panel shows 'Admin Check: Admin ✓' instead of 'Not admin ✗'",
+        "The authenticated user with principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' can access the admin dashboard",
+        "The 'Access Denied' screen no longer appears for the initialized owner"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Ensure the isCallerAdmin() backend method returns true for the owner principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' so that admin checks pass on the frontend",
+      "text": "Verify that the auto-initialization logic correctly assigns the first authenticated user as admin and persists this assignment across canister upgrades",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-assistant-5"
         ],
         "quotes": [
-          "Admin Check: ✗ Not admin",
-          "Products Query: N/A (not admin)"
+          "The initialization call isn't properly setting your principal as owner"
         ]
       },
       "acceptanceCriteria": [
-        "The Admin Diagnostics panel shows 'Admin Check: ✓ Admin' with a green checkmark",
-        "The Products Query section displays product data instead of 'N/A (not admin)'",
-        "All admin-gated features become accessible to this authenticated user"
+        "When an authenticated user accesses the system for the first time, they are automatically assigned admin privileges",
+        "The admin assignment persists after canister restart or upgrade",
+        "The isAdmin check returns true for the initialized owner principal"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "If the 'Initialize as Owner' button is retained, ensure it correctly assigns owner access to the authenticated principal when clicked, or remove it entirely if auto-assignment on first authentication is working correctly",
-      "target": "both",
+      "text": "Remove or fix the 'Initialize as Owner' button functionality since auto-initialization should handle owner assignment automatically",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-assistant-5"
         ],
         "quotes": [
-          "Shows the 'Initialize as Owner' button is available",
-          "Initialize as Owner button present but non-functional"
+          "The 'Initialize as Owner' button suggests the backend is waiting for manual initialization, but clicking it hasn't worked"
         ]
       },
       "acceptanceCriteria": [
-        "Either the button successfully grants owner access when clicked and shows a success confirmation",
-        "Or the button is removed from the Access Denied screen if auto-assignment on login is working",
-        "The user experience is clear and does not present non-functional UI elements"
+        "If auto-initialization works correctly, remove the 'Initialize as Owner' button from the AccessDeniedScreen",
+        "If the button is kept, ensure it properly triggers the backend initialization and updates the UI state immediately",
+        "The user experience is clear and doesn't show conflicting states (Initialized ✓ but Not admin ✗)"
       ]
     }
   ],
   "constraints": [
-    "Do not change the authentication principal - it must remain 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae'",
-    "Do not modify the Internet Identity integration or authentication flow",
-    "Preserve the Admin Diagnostics panel structure and all diagnostic information fields",
-    "Keep the profile name 'shrirangatre@gmail.com' associated with this principal"
+    "The authenticated principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' must be recognized as admin",
+    "Preserve the single-actor architecture in backend/main.mo",
+    "Do not modify the authentication flow or Internet Identity integration"
   ],
   "nonGoals": [
-    "Adding new admin users or multi-user admin management",
-    "Changing the UI design or layout of the Admin Dashboard",
-    "Modifying the product management features or CRUD operations",
-    "Implementing role-based access control beyond owner/admin designation",
-    "Changing how authentication principals are generated or stored"
+    "Adding multi-admin support or role-based access control beyond owner/non-owner",
+    "Changing the frontend UI design or layout",
+    "Modifying the product management features"
   ],
   "imageRequirements": {
     "required": [],

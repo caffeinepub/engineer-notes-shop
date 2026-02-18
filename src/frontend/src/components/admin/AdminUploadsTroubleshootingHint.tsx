@@ -42,7 +42,7 @@ export default function AdminUploadsTroubleshootingHint({
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Upload Unavailable</AlertTitle>
         <AlertDescription>
-          You must be signed in to upload product files. Please sign in using the button in the header. Once signed in, the admin system will be initialized automatically.
+          You must be signed in to upload product files. Please sign in using the button in the header. The first authenticated user to access admin features will automatically become the owner.
         </AlertDescription>
       </Alert>
     );
@@ -111,7 +111,7 @@ export default function AdminUploadsTroubleshootingHint({
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Admin System Not Initialized</AlertTitle>
         <AlertDescription className="space-y-2">
-          <p>The admin system needs to be initialized before you can upload product files. Click the button below to initialize it now.</p>
+          <p>The admin system needs to be initialized. Click the button below to initialize it now and become the owner.</p>
           {onRetryInitialization && (
             <Button
               variant="default"
@@ -179,8 +179,30 @@ export default function AdminUploadsTroubleshootingHint({
       <Alert className="mb-6">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Upload Unavailable</AlertTitle>
-        <AlertDescription>
-          You are not recognized as an admin. To gain admin access, set your profile name to the owner email address. Check the <strong>Store Owner Verification</strong> section above.
+        <AlertDescription className="space-y-2">
+          <p>You are not recognized as an admin. The first authenticated user to access admin features should automatically become the owner.</p>
+          <p className="text-sm">If you believe you should have admin access, try clicking the "Initialize Admin System" button below or the "Refresh Status" button in the diagnostics panel.</p>
+          {onRetryInitialization && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onRetryInitialization}
+              disabled={isInitializing}
+              className="mt-2"
+            >
+              {isInitializing ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                  Initializing...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="h-3 w-3 mr-2" />
+                  Initialize Admin System
+                </>
+              )}
+            </Button>
+          )}
         </AlertDescription>
       </Alert>
     );

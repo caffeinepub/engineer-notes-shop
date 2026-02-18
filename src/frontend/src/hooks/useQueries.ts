@@ -32,10 +32,12 @@ export function useInitializeStore() {
       await actor.initializeStore();
     },
     onSuccess: () => {
+      // Invalidate all admin-related queries after initialization
       queryClient.invalidateQueries({ queryKey: ['adminSystemInitialized'] });
       queryClient.invalidateQueries({ queryKey: ['isCallerAdmin'] });
       queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
       queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
     },
   });
 }
@@ -54,8 +56,7 @@ export function useIsCallerAdmin() {
       return actor.isCallerAdmin();
     },
     enabled: !!actor && !actorFetching,
-    retry: 2, // Retry a couple times to allow backend auto-initialization
-    retryDelay: 500, // Wait 500ms between retries
+    retry: 1,
     staleTime: 0, // Always refetch to ensure fresh admin status
   });
 
@@ -105,6 +106,7 @@ export function useSaveCallerUserProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
       queryClient.invalidateQueries({ queryKey: ['isCallerAdmin'] });
+      queryClient.invalidateQueries({ queryKey: ['adminSystemInitialized'] });
     },
   });
 }
@@ -196,8 +198,7 @@ export function useGetAdminProducts() {
       return actor.getProducts();
     },
     enabled: !!actor && !isFetching,
-    retry: 2, // Retry to allow backend auto-initialization
-    retryDelay: 500,
+    retry: 1,
   });
 }
 
@@ -225,6 +226,8 @@ export function useCreateProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
       queryClient.invalidateQueries({ queryKey: ['storefrontProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['isCallerAdmin'] });
+      queryClient.invalidateQueries({ queryKey: ['adminSystemInitialized'] });
     },
   });
 }

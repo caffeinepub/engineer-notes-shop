@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Loader2, AlertCircle, HelpCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, XCircle, Loader2, AlertCircle, HelpCircle, RefreshCw } from 'lucide-react';
 
 interface AdminDiagnosticsProps {
   isAuthenticated: boolean;
@@ -18,6 +19,7 @@ interface AdminDiagnosticsProps {
   adminSystemInitError?: boolean;
   adminSystemInitErrorMessage?: string;
   isAdminSystemInitialized?: boolean;
+  onRefreshAdminStatus?: () => void;
 }
 
 export default function AdminDiagnostics({
@@ -36,6 +38,7 @@ export default function AdminDiagnostics({
   adminSystemInitError,
   adminSystemInitErrorMessage,
   isAdminSystemInitialized,
+  onRefreshAdminStatus,
 }: AdminDiagnosticsProps) {
   const getAuthStatus = () => {
     if (!isAuthenticated) {
@@ -109,9 +112,23 @@ export default function AdminDiagnostics({
   return (
     <Card className="mb-6 border-dashed">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium flex items-center gap-2">
-          <AlertCircle className="h-4 w-4" />
-          Admin Diagnostics
+        <CardTitle className="text-sm font-medium flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            Admin Diagnostics
+          </div>
+          {onRefreshAdminStatus && isAuthenticated && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRefreshAdminStatus}
+              disabled={adminCheckLoading}
+              className="h-7 text-xs"
+            >
+              <RefreshCw className={`h-3 w-3 mr-1 ${adminCheckLoading ? 'animate-spin' : ''}`} />
+              Refresh Status
+            </Button>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
@@ -168,6 +185,12 @@ export default function AdminDiagnostics({
         {isAuthenticated && isAdmin === true && productsCount !== undefined && productsCount > 0 && (
           <div className="pt-2 border-t text-xs text-muted-foreground">
             ✓ Upload PDF buttons should be visible on all {productsCount} product card(s)
+          </div>
+        )}
+
+        {isAuthenticated && isAdmin === false && (
+          <div className="pt-2 border-t text-xs text-amber-600 dark:text-amber-500">
+            <strong>Expected behavior:</strong> The first authenticated user to access admin features should automatically become the owner. If you're seeing "Not admin" after signing in, try clicking "Refresh Status" above or the "Initialize Admin System" button below.
           </div>
         )}
       </CardContent>

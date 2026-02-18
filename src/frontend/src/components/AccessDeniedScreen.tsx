@@ -1,14 +1,12 @@
 import { ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
-import { ReactNode } from 'react';
 
 interface AccessDeniedScreenProps {
   message?: string;
-  customAction?: ReactNode;
 }
 
-export default function AccessDeniedScreen({ message, customAction }: AccessDeniedScreenProps) {
+export default function AccessDeniedScreen({ message }: AccessDeniedScreenProps) {
   const navigate = useNavigate();
 
   return (
@@ -19,12 +17,9 @@ export default function AccessDeniedScreen({ message, customAction }: AccessDeni
         <p className="text-muted-foreground mb-8 max-w-md">
           {message || 'You do not have permission to access the admin dashboard. The first authenticated user to access admin features will automatically become the owner.'}
         </p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button onClick={() => navigate({ to: '/' })} variant="outline">
-            Return to Storefront
-          </Button>
-          {customAction}
-        </div>
+        <Button onClick={() => navigate({ to: '/' })} variant="outline">
+          Return to Storefront
+        </Button>
       </div>
     </div>
   );

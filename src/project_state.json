@@ -1,23 +1,16 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Event ticketing system with owner access authentication issues - multiple failed build attempts to fix owner/admin assignment logic for Google-authenticated user",
-  "architectural_notes": [
-    "Google authentication integrated - principal ID: hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae",
-    "Admin/owner assignment logic failing despite successful authentication",
-    "Backend has Initialize as Owner button functionality that is not working"
-  ],
+  "summary": "New project",
+  "architectural_notes": [],
   "known_issues": [
-    "Owner access not being granted to authenticated Google user (shrirangatre@gmail.com)",
-    "Multiple build failures attempting to fix owner assignment logic",
-    "Admin check failing despite successful principal authentication",
-    "Initialize as Owner button present but non-functional"
+    "Owner access issue: Principal not recognized as admin after initialization despite authenticated state. Backend owner initialization or admin check logic may have mismatch with frontend."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-if-the-initialize-as-owner-button-is-retained-ensure-it-correctly-assigns-owner-access-to-the-authenticated-principal-when-clicked-or-remove-it-entirely-if-auto-assignment-on-first-authentication-is-working-correctly",
-      "title": "If the 'Initialize as Owner' button is retained, ensure it correctly assigns owner access to the authenticated principal when clicked, or remove it entirely if auto-assignment on first authentication is working correctly",
+      "id": "feature-remove-or-fix-the-initialize-as-owner-button-functionality-since-auto-initialization-should-handle-owner-assignment-automatically",
+      "title": "Remove or fix the 'Initialize as Owner' button functionality since auto-initialization should handle owner assignment automatically",
       "reqIds": [
         "REQ-3"
       ],
@@ -27,7 +20,7 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Fix the backend auto-owner assignment logic so that the authenticated principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' (shrirangatre@gmail.com) is correctly granted owner/admin access when they are the first authenticated user",
+      "summary": "Fix the backend admin check logic so that the authenticated principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' is correctly recognized as admin after system initialization",
       "reqIds": [
         "REQ-1"
       ],
@@ -35,7 +28,7 @@
     },
     {
       "id": "AR-2",
-      "summary": "Ensure the isCallerAdmin() backend method returns true for the owner principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' so that admin checks pass on the frontend",
+      "summary": "Verify that the auto-initialization logic correctly assigns the first authenticated user as admin and persists this assignment across canister upgrades",
       "reqIds": [
         "REQ-2"
       ],

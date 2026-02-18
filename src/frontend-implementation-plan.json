@@ -1,36 +1,41 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix owner access auto-assignment - Frontend updates",
+  "title": "Fix Admin Authentication - Backend Owner Recognition Issue",
   "requirements": [
     {
       "id": "REQ-3",
-      "summary": "Update 'Initialize as Owner' button behavior or remove it if auto-assignment is working",
+      "summary": "Remove the 'Initialize as Owner' button from AccessDeniedScreen since auto-initialization should handle owner assignment automatically",
       "acceptanceCriteria": [
-        "Either the button successfully grants owner access when clicked and shows a success confirmation",
-        "Or the button is removed from the Access Denied screen if auto-assignment on login is working",
-        "The user experience is clear and does not present non-functional UI elements"
+        "If auto-initialization works correctly, remove the 'Initialize as Owner' button from the AccessDeniedScreen",
+        "If the button is kept, ensure it properly triggers the backend initialization and updates the UI state immediately",
+        "The user experience is clear and doesn't show conflicting states (Initialized ✓ but Not admin ✗)"
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/AccessDeniedScreen.tsx",
           "operation": "modify",
-          "description": "Review and potentially remove the 'Initialize as Owner' button and its associated logic. If the backend auto-assignment (REQ-1, REQ-2) is working correctly, this button becomes unnecessary. If the button is retained, ensure it correctly calls the backend initialization method and provides user feedback (success/error toast messages). Add error handling for failed initialization attempts."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Review the admin initialization mutation hook. If the 'Initialize as Owner' button is retained, ensure the mutation properly invalidates admin status queries after successful initialization so the UI updates immediately. If the button is removed, this mutation may no longer be needed on the frontend."
-        },
-        {
-          "path": "frontend/src/components/admin/AdminDiagnostics.tsx",
-          "operation": "modify",
-          "description": "Ensure the Admin Diagnostics panel correctly reflects the updated admin status after the backend changes (REQ-1, REQ-2). The component should automatically refresh when the user's admin status changes, showing 'Admin Check: ✓ Admin' with a green indicator instead of the red '✗ Not admin' status."
+          "description": "Remove the 'Initialize as Owner' button and its associated customAction prop since the authorization component handles automatic owner assignment on first authenticated access. Update the default message to clearly state that admin access is automatically granted to the first authenticated user without requiring manual initialization. This eliminates the confusing UI state where initialization appears successful but admin check fails."
         },
         {
           "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Review the admin dashboard access control logic to ensure it correctly reflects the user's admin status based on the backend isCallerAdmin() response. Remove or update any hardcoded checks that might be preventing the authenticated principal from accessing admin features. Ensure the page refreshes admin status when needed."
+          "description": "Remove the logic that passes the 'Initialize as Owner' button as customAction to AccessDeniedScreen. Simplify the access denied handling to show only the default AccessDeniedScreen without custom actions, relying on the automatic initialization provided by the authorization component's useActor hook integration."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Review and potentially remove the useInitializeStore mutation hook if it's only used for manual initialization via the removed button. Verify that no other parts of the application depend on this mutation. If it's still needed for other initialization scenarios, keep it but ensure it properly invalidates the admin check queries after successful execution."
+        },
+        {
+          "path": "frontend/src/components/admin/AdminDiagnostics.tsx",
+          "operation": "modify",
+          "description": "Update the diagnostics display to better reflect the automatic initialization flow from the authorization component. Add explanatory text that clarifies the expected behavior: authenticated users should automatically become admin on first access. Consider adding a 'Refresh Admin Status' button that re-queries isCallerAdmin and isAdminSystemInitialized to help diagnose state issues without requiring full page refresh."
+        },
+        {
+          "path": "frontend/src/hooks/useActor.ts",
+          "operation": "modify",
+          "description": "Review the automatic admin initialization logic that should be triggered when creating the actor with authentication. Ensure that the initialization is properly awaited and that dependent queries (admin status, system initialized) are invalidated after the initialization completes. Verify the component's usage instructions are being followed correctly: the first authenticated user should automatically receive admin role without requiring manual initialization calls."
         }
       ]
     }

@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-if-the-initialize-as-owner-button-is-retained-ensure-it-correctly-assigns-owner-access-to-the-authenticated-principal-when-clicked-or-remove-it-entirely-if-auto-assignment-on-first-authentication-is-working-correctly",
-      "featureTitle": "If the 'Initialize as Owner' button is retained, ensure it correctly assigns owner access to the authenticated principal when clicked, or remove it entirely if auto-assignment on first authentication is working correctly",
+      "featureId": "feature-remove-or-fix-the-initialize-as-owner-button-functionality-since-auto-initialization-should-handle-owner-assignment-automatically",
+      "featureTitle": "Remove or fix the 'Initialize as Owner' button functionality since auto-initialization should handle owner assignment automatically",
       "files": [
         "frontend/src/components/AccessDeniedScreen.tsx",
+        "frontend/src/components/admin/AdminDiagnostics.tsx",
         "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/AdminDashboardPage.tsx"
       ],

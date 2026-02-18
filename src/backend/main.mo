@@ -43,16 +43,11 @@ actor {
   let products = Map.empty<Text, Product>();
   let userProfiles = Map.empty<Principal, UserProfile>();
   let purchases = Map.empty<Principal, Set.Set<Text>>();
+  var systemInitialized : Bool = false;
 
-  var adminSystemInitialized : Bool = false;
-
-  func isGlobalAdmin(caller : Principal) : Bool {
-    AccessControl.isAdmin(accessControlState, caller);
-  };
-
-  func requireAdminOrOwner(caller : Principal) {
-    if (not isGlobalAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only store owners and admins can perform this action");
+  func requireAdmin(caller : Principal) {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
     };
   };
 
@@ -63,17 +58,17 @@ actor {
   };
 
   func autoInitializeIfNeeded(caller : Principal) {
-    if (not adminSystemInitialized and not caller.isAnonymous()) {
+    if (not systemInitialized and not caller.isAnonymous()) {
       if (categories.isEmpty()) {
         addDefaultCategories();
       };
       AccessControl.initialize(accessControlState, caller, "", "");
-      adminSystemInitialized := true;
+      systemInitialized := true;
     };
   };
 
   public shared ({ caller }) func initializeStore() : async () {
-    if (adminSystemInitialized) {
+    if (systemInitialized) {
       Runtime.trap("Store already initialized");
     };
 
@@ -86,7 +81,7 @@ actor {
     };
 
     AccessControl.initialize(accessControlState, caller, "", "");
-    adminSystemInitialized := true;
+    systemInitialized := true;
   };
 
   func addDefaultCategories() {
@@ -128,7 +123,7 @@ actor {
   };
 
   public query func isAdminSystemInitialized() : async Bool {
-    adminSystemInitialized;
+    systemInitialized;
   };
 
   public query ({ caller }) func getCategories() : async [Category] {
@@ -151,7 +146,7 @@ actor {
 
   public shared ({ caller }) func createCategory(id : Text, name : Text, icon : Text) : async () {
     autoInitializeIfNeeded(caller);
-    requireAdminOrOwner(caller);
+    requireAdmin(caller);
 
     let category : Category = {
       id;
@@ -163,7 +158,7 @@ actor {
 
   public shared ({ caller }) func createProduct(id : Text, title : Text, author : Text, priceInCents : Nat, categoryId : Text) : async () {
     autoInitializeIfNeeded(caller);
-    requireAdminOrOwner(caller);
+    requireAdmin(caller);
     ensureCategory(categoryId);
 
     let product : Product = {
@@ -186,7 +181,7 @@ actor {
     categoryId : Text,
   ) : async () {
     autoInitializeIfNeeded(caller);
-    requireAdminOrOwner(caller);
+    requireAdmin(caller);
     let product = getProductInternal(id);
     ensureCategory(categoryId);
 
@@ -205,7 +200,7 @@ actor {
 
   public shared ({ caller }) func deleteCategory(id : Text) : async () {
     autoInitializeIfNeeded(caller);
-    requireAdminOrOwner(caller);
+    requireAdmin(caller);
 
     switch (categories.get(id)) {
       case (null) { Runtime.trap("Category not found") };
@@ -215,7 +210,7 @@ actor {
 
   public shared ({ caller }) func deleteProduct(id : Text) : async () {
     autoInitializeIfNeeded(caller);
-    requireAdminOrOwner(caller);
+    requireAdmin(caller);
 
     switch (products.get(id)) {
       case (null) { Runtime.trap("Product not found") };
@@ -225,7 +220,7 @@ actor {
 
   public shared ({ caller }) func setProductPublished(id : Text, isPublished : Bool) : async () {
     autoInitializeIfNeeded(caller);
-    requireAdminOrOwner(caller);
+    requireAdmin(caller);
 
     let product = getProductInternal(id);
     let updatedProduct : Product = {
@@ -243,7 +238,7 @@ actor {
 
   public shared ({ caller }) func uploadProductFile(id : Text, blob : Storage.ExternalBlob) : async () {
     autoInitializeIfNeeded(caller);
-    requireAdminOrOwner(caller);
+    requireAdmin(caller);
 
     let product = getProductInternal(id);
 
@@ -280,7 +275,7 @@ actor {
   public query ({ caller }) func getProduct(productId : Text) : async Product {
     let product = getProductInternal(productId);
 
-    if (not product.isPublished and not isGlobalAdmin(caller)) {
+    if (not product.isPublished and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Product not found");
     };
 
@@ -309,7 +304,7 @@ actor {
     autoInitializeIfNeeded(caller);
     let product = getProductInternal(productId);
 
-    let isAdmin = isGlobalAdmin(caller);
+    let isAdmin = AccessControl.isAdmin(accessControlState, caller);
     let hasPurchased = switch (purchases.get(caller)) {
       case (null) { false };
       case (?userPurchases) { userPurchases.contains(productId) };
@@ -326,7 +321,7 @@ actor {
   };
 
   public query ({ caller }) func getProducts() : async [Product] {
-    requireAdminOrOwner(caller);
+    requireAdmin(caller);
     Array.fromIter(products.values());
   };
 
@@ -367,14 +362,14 @@ actor {
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (not Principal.equal(caller, user) and not isGlobalAdmin(caller)) {
+    if (not Principal.equal(caller, user) and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: You can only view your own profile unless you are an admin.");
     };
     userProfiles.get(user);
   };
 
   public query ({ caller }) func getAllUserProfiles() : async [(Principal, UserProfile)] {
-    requireAdminOrOwner(caller);
+    requireAdmin(caller);
     Array.fromIter(userProfiles.entries());
   };
 };
