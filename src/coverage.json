@@ -1,56 +1,41 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-18T07:07:54.374Z",
+  "generatedAt": "2026-02-18T18:12:33.947Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 5,
-    "implemented": 2,
+    "total": 3,
+    "implemented": 1,
     "items": [
       {
-        "id": "REQ-55",
-        "summary": "Update the backend admin system so that if the admin system is initialized but there are no admins configured (or the admin list is otherwise empty), the first authenticated caller can become the store owner/admin without providing any tokens.",
+        "id": "REQ-1",
+        "summary": "Fix the backend auto-owner assignment logic so that the authenticated principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' (shrirangatre@gmail.com) is correctly granted owner/admin access when they are the first authenticated user",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-56",
-        "summary": "Persist admin-system state across upgrades so the app does not lose (a) whether the admin system is initialized and (b) the configured admin principal(s), while preserving existing categories/products/purchases/user profiles data.",
+        "id": "REQ-2",
+        "summary": "Ensure the isCallerAdmin() backend method returns true for the owner principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' so that admin checks pass on the frontend",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-57",
-        "summary": "Expose backend-readable admin-gating diagnostics sufficient for the frontend Admin Diagnostics panel to distinguish: (a) signed out, (b) signed in but not admin, (c) admin system not initialized, and (d) initialized but no admin configured / claimable state; ensure any surfaced error strings remain in English.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-58",
-        "summary": "Add a frontend \"Claim Store Owner Access\" (tokenless) call-to-action on /admin that is shown when the user is signed in, the admin system is initialized, the user is not currently an admin, and backend diagnostics indicate the admin role is claimable (e.g., no admins exist).",
+        "id": "REQ-3",
+        "summary": "If the 'Initialize as Owner' button is retained, ensure it correctly assigns owner access to the authenticated principal when clicked, or remove it entirely if auto-assignment on first authentication is working correctly",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/AdminDashboardPage.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AdminDashboardPage.tsx"
-        ]
-      },
-      {
-        "id": "REQ-59",
-        "summary": "Update the React Query layer to support the new tokenless claim-owner/admin flow and ensure all relevant queries are invalidated/refetched after success (admin check, admin products, and any admin diagnostics / initialization queries used by /admin).",
-        "status": "implemented",
-        "plannedFiles": [
+          "frontend/src/components/AccessDeniedScreen.tsx",
           "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/admin/AdminDiagnostics.tsx",
           "frontend/src/pages/AdminDashboardPage.tsx"
         ],
         "matchedFiles": [
+          "frontend/src/components/AccessDeniedScreen.tsx",
           "frontend/src/hooks/useQueries.ts",
           "frontend/src/pages/AdminDashboardPage.tsx"
         ]
@@ -66,6 +51,7 @@
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
+    "frontend/src/components/AccessDeniedScreen.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
     "frontend/src/hooks/useQueries.ts",

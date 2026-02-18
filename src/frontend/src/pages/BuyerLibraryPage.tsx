@@ -1,5 +1,5 @@
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetPurchasedProducts, useDownloadProductFile } from '../hooks/useQueries';
+import { useGetPurchasedProductIds, useGetStorefrontProducts } from '../hooks/useQueries';
 import AccessDeniedScreen from '../components/AccessDeniedScreen';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,24 +9,32 @@ import { Download, Library, AlertCircle, Loader2, ShoppingBag } from 'lucide-rea
 import { toast } from 'sonner';
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
+import { useActor } from '../hooks/useActor';
+import type { Product } from '../backend';
 
 export default function BuyerLibraryPage() {
   const { identity } = useInternetIdentity();
+  const { actor } = useActor();
   const navigate = useNavigate();
   const isAuthenticated = !!identity;
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const { data: purchasedProducts, isLoading } = useGetPurchasedProducts();
-  const downloadFile = useDownloadProductFile();
+  const { data: purchasedProductIds, isLoading: purchasedLoading } = useGetPurchasedProductIds();
+  const { data: allProducts, isLoading: productsLoading } = useGetStorefrontProducts();
 
   if (!isAuthenticated) {
     return <AccessDeniedScreen message="Please login to access your library." />;
   }
 
   const handleDownload = async (productId: string, title: string) => {
+    if (!actor) {
+      toast.error('Unable to download. Please try again.');
+      return;
+    }
+
     setDownloadingId(productId);
     try {
-      const blob = await downloadFile.mutateAsync(productId);
+      const blob = await actor.downloadProductFile(productId);
       const url = blob.getDirectURL();
       
       const link = document.createElement('a');
@@ -52,6 +60,8 @@ export default function BuyerLibraryPage() {
     }
   };
 
+  const isLoading = purchasedLoading || productsLoading;
+
   if (isLoading) {
     return (
       <div className="page-container section-spacing">
@@ -65,6 +75,11 @@ export default function BuyerLibraryPage() {
     );
   }
 
+  // Filter products to only show purchased ones
+  const purchasedProducts: Product[] = allProducts?.filter(product => 
+    purchasedProductIds?.includes(product.id)
+  ) || [];
+
   return (
     <div className="page-container section-spacing">
       <div className="flex items-center gap-3 mb-8">
@@ -75,7 +90,7 @@ export default function BuyerLibraryPage() {
         </div>
       </div>
 
-      {!purchasedProducts || purchasedProducts.length === 0 ? (
+      {purchasedProducts.length === 0 ? (
         <Alert>
           <ShoppingBag className="h-4 w-4" />
           <AlertTitle>No purchases yet</AlertTitle>

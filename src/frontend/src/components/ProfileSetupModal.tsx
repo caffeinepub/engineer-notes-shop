@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useSaveCallerUserProfile } from '../hooks/useQueries';
+import { normalizeProfileName } from '../utils/normalizeProfileName';
 import { Loader2 } from 'lucide-react';
 
 interface ProfileSetupModalProps {
@@ -16,8 +17,9 @@ export default function ProfileSetupModal({ open }: ProfileSetupModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim()) {
-      saveProfile.mutate({ name: name.trim() });
+    const normalizedName = normalizeProfileName(name);
+    if (normalizedName) {
+      saveProfile.mutate({ name: normalizedName });
     }
   };
 
@@ -44,7 +46,7 @@ export default function ProfileSetupModal({ open }: ProfileSetupModalProps) {
             />
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={!name.trim() || saveProfile.isPending}>
+            <Button type="submit" disabled={!normalizeProfileName(name) || saveProfile.isPending}>
               {saveProfile.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Continue
             </Button>

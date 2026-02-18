@@ -8,6 +8,15 @@ export function getRetryCommand(): string {
 }
 
 /**
+ * Returns the recommended upgrade command for deployment.
+ * This command performs an upgrade deployment, preserving canister state.
+ */
+export function getUpgradeCommand(): string {
+  // Upgrade deployment command for IC projects
+  return 'dfx deploy --network ic --upgrade-unchanged';
+}
+
+/**
  * Returns additional diagnostic commands that can help debug deployment issues.
  */
 export function getDiagnosticCommands(): string[] {

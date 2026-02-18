@@ -71,7 +71,6 @@ export const idlService = IDL.Service({
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'claimStoreOwnership' : IDL.Func([], [], []),
   'createCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
   'createProduct' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
@@ -90,7 +89,7 @@ export const idlService = IDL.Service({
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
   'getCategory' : IDL.Func([IDL.Text], [Category], ['query']),
-  'getProduct' : IDL.Func([IDL.Text], [Product], []),
+  'getProduct' : IDL.Func([IDL.Text], [Product], ['query']),
   'getProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
   'getPurchasedProductIds' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
   'getUserProfile' : IDL.Func(
@@ -98,9 +97,9 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'initializeStore' : IDL.Func([], [], []),
   'isAdminSystemInitialized' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'isStoreClaimable' : IDL.Func([], [IDL.Bool], ['query']),
   'listStorefrontProducts' : IDL.Func([], [ProductList], ['query']),
   'listStorefrontProductsByCategory' : IDL.Func(
       [IDL.Text],
@@ -109,7 +108,6 @@ export const idlService = IDL.Service({
     ),
   'purchaseProduct' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [UserProfile], []),
-  'setAdminInitialized' : IDL.Func([], [], []),
   'setProductPublished' : IDL.Func([IDL.Text, IDL.Bool], [], []),
   'updateProduct' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
@@ -185,7 +183,6 @@ export const idlFactory = ({ IDL }) => {
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'claimStoreOwnership' : IDL.Func([], [], []),
     'createCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
     'createProduct' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
@@ -204,7 +201,7 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
     'getCategory' : IDL.Func([IDL.Text], [Category], ['query']),
-    'getProduct' : IDL.Func([IDL.Text], [Product], []),
+    'getProduct' : IDL.Func([IDL.Text], [Product], ['query']),
     'getProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
     'getPurchasedProductIds' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
     'getUserProfile' : IDL.Func(
@@ -212,9 +209,9 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'initializeStore' : IDL.Func([], [], []),
     'isAdminSystemInitialized' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'isStoreClaimable' : IDL.Func([], [IDL.Bool], ['query']),
     'listStorefrontProducts' : IDL.Func([], [ProductList], ['query']),
     'listStorefrontProductsByCategory' : IDL.Func(
         [IDL.Text],
@@ -223,7 +220,6 @@ export const idlFactory = ({ IDL }) => {
       ),
     'purchaseProduct' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [UserProfile], []),
-    'setAdminInitialized' : IDL.Func([], [], []),
     'setProductPublished' : IDL.Func([IDL.Text, IDL.Bool], [], []),
     'updateProduct' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],

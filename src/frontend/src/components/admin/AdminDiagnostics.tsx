@@ -5,6 +5,7 @@ import { CheckCircle2, XCircle, Loader2, AlertCircle, HelpCircle } from 'lucide-
 interface AdminDiagnosticsProps {
   isAuthenticated: boolean;
   principalText?: string;
+  profileName?: string;
   adminCheckLoading: boolean;
   adminCheckError: boolean;
   adminCheckErrorMessage?: string;
@@ -22,6 +23,7 @@ interface AdminDiagnosticsProps {
 export default function AdminDiagnostics({
   isAuthenticated,
   principalText,
+  profileName,
   adminCheckLoading,
   adminCheckError,
   adminCheckErrorMessage,
@@ -126,6 +128,15 @@ export default function AdminDiagnostics({
             <span className="text-muted-foreground">Principal:</span>
             <code className="text-xs bg-muted px-2 py-1 rounded break-all max-w-[60%] text-right">
               {principalText}
+            </code>
+          </div>
+        )}
+
+        {isAuthenticated && profileName && (
+          <div className="flex items-start justify-between gap-2">
+            <span className="text-muted-foreground">Profile Name:</span>
+            <code className="text-xs bg-muted px-2 py-1 rounded break-all max-w-[60%] text-right">
+              {profileName}
             </code>
           </div>
         )}

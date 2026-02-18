@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useIsCallerAdmin, useGetAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useSetProductPublished, useUploadProductFile, useGetCategories, useIsAdminSystemInitialized, useInitializeAdminSystem, useIsStoreClaimable, useClaimStoreOwnership } from '../hooks/useQueries';
+import { useIsCallerAdmin, useGetAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useSetProductPublished, useUploadProductFile, useGetCategories, useIsAdminSystemInitialized, useGetCallerUserProfile, useInitializeStore } from '../hooks/useQueries';
 import AccessDeniedScreen from '../components/AccessDeniedScreen';
 import SafeProductUploadAction from '../components/admin/SafeProductUploadAction';
 import AdminDiagnostics from '../components/admin/AdminDiagnostics';
@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { ExternalBlob } from '../backend';
 import type { Product } from '../backend';
 import { Progress } from '@/components/ui/progress';
+import { translateAdminError } from '../utils/adminErrors';
 
 interface UploadState {
   isUploading: boolean;
@@ -27,13 +28,12 @@ interface UploadState {
 
 export default function AdminDashboardPage() {
   const { identity } = useInternetIdentity();
+  const { data: userProfile, isLoading: profileLoading } = useGetCallerUserProfile();
   const { data: isAdmin, isLoading: adminLoading, isError: adminError, error: adminErrorObj, refetch: refetchAdmin } = useIsCallerAdmin();
   const { data: products, isLoading: productsLoading, isError: productsError, error: productsErrorObj, refetch: refetchProducts } = useGetAdminProducts();
-  const { data: categories } = useGetCategories();
+  const { data: categories, isLoading: categoriesLoading } = useGetCategories();
   const { data: isAdminSystemInitialized, isLoading: adminSystemInitLoading, isError: adminSystemInitError, error: adminSystemInitErrorObj, refetch: refetchAdminSystemInit } = useIsAdminSystemInitialized();
-  const { data: isStoreClaimable, isLoading: storeClaimableLoading } = useIsStoreClaimable();
-  const initializeAdminSystem = useInitializeAdminSystem();
-  const claimStoreOwnership = useClaimStoreOwnership();
+  const initializeStore = useInitializeStore();
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -51,19 +51,55 @@ export default function AdminDashboardPage() {
     title: '',
     author: '',
     priceInCents: '',
-    categoryId: 'default',
+    categoryId: '',
   });
+
+  // Auto-select first category when categories load or dialog opens
+  useEffect(() => {
+    if (showCreateDialog && categories && categories.length > 0 && !formData.categoryId) {
+      setFormData(prev => ({ ...prev, categoryId: categories[0].id }));
+    }
+  }, [showCreateDialog, categories, formData.categoryId]);
+
+  // Auto-select first category when editing
+  useEffect(() => {
+    if (editingProduct && categories && categories.length > 0) {
+      setFormData({
+        id: editingProduct.id,
+        title: editingProduct.title,
+        author: editingProduct.author,
+        priceInCents: editingProduct.priceInCents.toString(),
+        categoryId: editingProduct.category,
+      });
+    }
+  }, [editingProduct, categories]);
 
   const principalText = identity?.getPrincipal().toString();
   const adminErrorMessage = adminErrorObj instanceof Error ? adminErrorObj.message : String(adminErrorObj || 'Unknown error');
   const productsErrorMessage = productsErrorObj instanceof Error ? productsErrorObj.message : String(productsErrorObj || 'Unknown error');
   const adminSystemInitErrorMessage = adminSystemInitErrorObj instanceof Error ? adminSystemInitErrorObj.message : String(adminSystemInitErrorObj || 'Unknown error');
 
+  const handleInitializeAsOwner = async () => {
+    try {
+      await initializeStore.mutateAsync();
+      toast.success('Successfully initialized as owner! You now have admin access.');
+      // Refresh all admin-related queries
+      await refetchAdminSystemInit();
+      await refetchAdmin();
+      await refetchProducts();
+    } catch (error: any) {
+      const errorMessage = translateAdminError(error);
+      toast.error(`Failed to initialize: ${errorMessage}`);
+      console.error('Initialization error:', error);
+    }
+  };
+
   // Always show diagnostics at the top
   const diagnosticsSection = (
     <AdminDiagnostics
       isAuthenticated={!!identity}
       principalText={principalText}
+      profileName={userProfile?.name}
       adminCheckLoading={adminLoading}
       adminCheckError={adminError}
       adminCheckErrorMessage={adminErrorMessage}
@@ -79,562 +115,298 @@ export default function AdminDashboardPage() {
     />
   );
 
-  // Always show troubleshooting hint
-  const troubleshootingHint = (
-    <AdminUploadsTroubleshootingHint
-      isAuthenticated={!!identity}
-      adminCheckLoading={adminLoading}
-      adminCheckError={adminError}
-      isAdmin={isAdmin}
-      productsLoading={productsLoading}
-      productsError={productsError}
-      adminSystemInitLoading={adminSystemInitLoading}
-      adminSystemInitError={adminSystemInitError}
-      isAdminSystemInitialized={isAdminSystemInitialized}
-      onRetryAdminCheck={refetchAdmin}
-      onRetryProducts={refetchProducts}
-      onRetryAdminSystemInit={refetchAdminSystemInit}
-    />
-  );
-
-  // Not signed in
-  if (!identity) {
+  // Show loading state while checking authentication and admin status
+  if (!identity || adminLoading || profileLoading) {
     return (
-      <div className="page-container section-spacing">
-        {diagnosticsSection}
-        {troubleshootingHint}
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Authentication Required</AlertTitle>
-          <AlertDescription>
-            Please sign in to access the Admin Dashboard.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
-  // Admin system initialization loading
-  if (adminSystemInitLoading) {
-    return (
-      <div className="page-container section-spacing">
-        {diagnosticsSection}
-        {troubleshootingHint}
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex items-center gap-3 mb-8">
-          <LayoutDashboard className="h-8 w-8" />
-          <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Checking admin system configuration...</p>
-          </div>
+          <LayoutDashboard className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-64" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // Admin system initialization error
-  if (adminSystemInitError) {
-    return (
-      <div className="page-container section-spacing">
         {diagnosticsSection}
-        {troubleshootingHint}
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Admin System Check Failed</AlertTitle>
-          <AlertDescription className="mt-2">
-            Unable to verify the admin system configuration. This may be a temporary network issue.
-            <div className="mt-3">
-              <strong>Error:</strong> {adminSystemInitErrorMessage}
-            </div>
-          </AlertDescription>
-        </Alert>
-        <div className="mt-4">
-          <Button onClick={() => refetchAdminSystemInit()} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry Admin System Check
-          </Button>
+        <div className="space-y-4">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
         </div>
       </div>
     );
   }
 
-  // Admin system not initialized - show initialization screen
-  if (isAdminSystemInitialized !== undefined && !isAdminSystemInitialized) {
-    const handleInitialize = async () => {
-      try {
-        await initializeAdminSystem.mutateAsync();
-        toast.success('Admin system initialized successfully! You are now the store owner.');
-      } catch (error: any) {
-        const errorMessage = error.message || 'Failed to initialize admin system';
-        toast.error(errorMessage);
-      }
-    };
-
-    return (
-      <div className="page-container section-spacing">
-        {diagnosticsSection}
-        {troubleshootingHint}
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>Initialize Admin System</CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">
-              Welcome! The admin system needs to be initialized. Click the button below to set yourself as the store owner and begin managing products.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>First-Time Setup</AlertTitle>
-              <AlertDescription>
-                This is a one-time setup process. Once initialized, you will have full administrative access to manage products, categories, and store settings.
-              </AlertDescription>
-            </Alert>
-
-            {initializeAdminSystem.isError && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Initialization Failed</AlertTitle>
-                <AlertDescription>
-                  {initializeAdminSystem.error instanceof Error 
-                    ? initializeAdminSystem.error.message 
-                    : 'An error occurred during initialization. Please try again.'}
-                </AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-          <CardFooter>
-            <Button 
-              onClick={handleInitialize}
-              className="w-full" 
-              disabled={initializeAdminSystem.isPending}
-            >
-              {initializeAdminSystem.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Initializing Admin System...
-                </>
-              ) : (
-                'Initialize Admin System'
-              )}
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
-
-  // Admin check loading
-  if (adminLoading) {
-    return (
-      <div className="page-container section-spacing">
-        {diagnosticsSection}
-        {troubleshootingHint}
-        <div className="flex items-center gap-3 mb-8">
-          <LayoutDashboard className="h-8 w-8" />
-          <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Checking permissions...</p>
-          </div>
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-64" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // Admin check error
-  if (adminError) {
-    return (
-      <div className="page-container section-spacing">
-        {diagnosticsSection}
-        {troubleshootingHint}
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Permission Check Failed</AlertTitle>
-          <AlertDescription className="mt-2">
-            Unable to verify your admin permissions. This may be a temporary network issue.
-            <div className="mt-3">
-              <strong>Error:</strong> {adminErrorMessage}
-            </div>
-          </AlertDescription>
-        </Alert>
-        <div className="mt-4">
-          <Button onClick={() => refetchAdmin()} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry Permission Check
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Not an admin - check if store is claimable
+  // Show access denied if user is not admin
   if (isAdmin === false) {
-    // Show claim button if store is claimable
-    if (storeClaimableLoading) {
-      return (
-        <div className="page-container section-spacing">
-          {diagnosticsSection}
-          {troubleshootingHint}
-          <div className="flex items-center gap-3 mb-8">
-            <LayoutDashboard className="h-8 w-8" />
-            <div>
-              <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-              <p className="text-muted-foreground">Checking store ownership status...</p>
-            </div>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-64" />
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    if (isStoreClaimable === true) {
-      const handleClaimOwnership = async () => {
-        try {
-          await claimStoreOwnership.mutateAsync();
-          toast.success('Store ownership claimed successfully! You are now the store owner.');
-        } catch (error: any) {
-          const errorMessage = error.message || 'Failed to claim store ownership';
-          toast.error(errorMessage);
-        }
-      };
-
-      return (
-        <div className="page-container section-spacing">
-          {diagnosticsSection}
-          {troubleshootingHint}
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <ShieldCheck className="h-8 w-8 text-primary" />
-                <div>
-                  <CardTitle>Claim Store Owner Access</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    The store owner role is available. Claim it now to manage products and inventory.
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Store Ownership Available</AlertTitle>
-                <AlertDescription>
-                  You can claim the store owner role and gain full administrative access. This action will grant you permissions to manage products, categories, and all store settings.
-                </AlertDescription>
-              </Alert>
-
-              {claimStoreOwnership.isError && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Claim Failed</AlertTitle>
-                  <AlertDescription>
-                    {claimStoreOwnership.error instanceof Error 
-                      ? claimStoreOwnership.error.message 
-                      : 'An error occurred while claiming store ownership. Please try again.'}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </CardContent>
-            <CardFooter>
-              <Button 
-                onClick={handleClaimOwnership}
-                className="w-full" 
-                size="lg"
-                disabled={claimStoreOwnership.isPending}
-              >
-                {claimStoreOwnership.isPending ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Claiming Store Ownership...
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck className="h-5 w-5 mr-2" />
-                    Claim Store Owner Access
-                  </>
-                )}
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-      );
-    }
-
-    // Store is not claimable - show access denied
-    return (
-      <div className="page-container section-spacing">
-        {diagnosticsSection}
-        {troubleshootingHint}
-        <AccessDeniedScreen 
-          message="You are not authorized as the store owner or administrator. Only the store owner can access the Admin Dashboard to manage products and inventory."
-        />
-      </div>
+    const initializeButton = (
+      <Button 
+        onClick={handleInitializeAsOwner}
+        disabled={initializeStore.isPending}
+        className="gap-2"
+      >
+        {initializeStore.isPending ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Initializing...
+          </>
+        ) : (
+          <>
+            <ShieldCheck className="h-4 w-4" />
+            Initialize as Owner
+          </>
+        )}
+      </Button>
     );
-  }
 
-  // Admin products query error
-  if (productsError) {
     return (
-      <div className="page-container section-spacing">
-        {diagnosticsSection}
-        {troubleshootingHint}
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="flex items-center gap-3 mb-8">
-          <LayoutDashboard className="h-8 w-8" />
-          <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage your products and inventory</p>
-          </div>
+          <LayoutDashboard className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         </div>
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Failed to Load Products</AlertTitle>
-          <AlertDescription className="mt-2">
-            Unable to retrieve your product list. This may be a temporary network issue.
-            <div className="mt-3">
-              <strong>Error:</strong> {productsErrorMessage}
-            </div>
-          </AlertDescription>
-        </Alert>
-        <div className="mt-4">
-          <Button onClick={() => refetchProducts()} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry Loading Products
-          </Button>
-        </div>
+        {diagnosticsSection}
+        <AccessDeniedScreen customAction={initializeButton} />
       </div>
     );
   }
 
-  const resetForm = () => {
-    setFormData({ id: '', title: '', author: '', priceInCents: '', categoryId: 'default' });
-    setEditingProduct(null);
-    setShowCreateDialog(false);
-  };
-
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await createProduct.mutateAsync({
         id: formData.id,
         title: formData.title,
         author: formData.author,
-        priceInCents: BigInt(Math.round(parseFloat(formData.priceInCents) * 100)),
+        priceInCents: BigInt(formData.priceInCents),
         categoryId: formData.categoryId,
       });
       toast.success('Product created successfully');
-      resetForm();
+      setShowCreateDialog(false);
+      setFormData({ id: '', title: '', author: '', priceInCents: '', categoryId: '' });
     } catch (error: any) {
-      toast.error(error.message || 'Failed to create product');
+      const errorMessage = translateAdminError(error);
+      toast.error(errorMessage);
     }
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
+  const handleUpdateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProduct) return;
-    
+
     try {
       await updateProduct.mutateAsync({
-        id: editingProduct.id,
+        id: formData.id,
         title: formData.title,
         author: formData.author,
-        priceInCents: BigInt(Math.round(parseFloat(formData.priceInCents) * 100)),
+        priceInCents: BigInt(formData.priceInCents),
         categoryId: formData.categoryId,
       });
       toast.success('Product updated successfully');
-      resetForm();
+      setEditingProduct(null);
+      setFormData({ id: '', title: '', author: '', priceInCents: '', categoryId: '' });
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update product');
+      const errorMessage = translateAdminError(error);
+      toast.error(errorMessage);
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteProduct = async () => {
     if (!deletingProduct) return;
-    
+
     try {
       await deleteProduct.mutateAsync(deletingProduct.id);
       toast.success('Product deleted successfully');
       setDeletingProduct(null);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete product');
+      const errorMessage = translateAdminError(error);
+      toast.error(errorMessage);
     }
   };
 
-  const handleTogglePublish = async (product: Product) => {
+  const handleTogglePublished = async (product: Product) => {
     try {
       await setPublished.mutateAsync({
         id: product.id,
         isPublished: !product.isPublished,
       });
-      toast.success(product.isPublished ? 'Product unpublished' : 'Product published');
+      toast.success(
+        product.isPublished
+          ? 'Product unpublished successfully'
+          : 'Product published successfully'
+      );
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update product');
+      const errorMessage = translateAdminError(error);
+      toast.error(errorMessage);
     }
   };
 
-  const handleFileUpload = async (productId: string, file: File) => {
+  const handleFileSelected = async (productId: string, file: File) => {
     setUploadStates(prev => ({
       ...prev,
-      [productId]: { isUploading: true, progress: 0 }
+      [productId]: { isUploading: true, progress: 0 },
     }));
-    
+
     try {
       const arrayBuffer = await file.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
-      
       const blob = ExternalBlob.fromBytes(uint8Array).withUploadProgress((percentage) => {
         setUploadStates(prev => ({
           ...prev,
-          [productId]: { isUploading: true, progress: percentage }
+          [productId]: { isUploading: true, progress: percentage },
         }));
       });
 
       await uploadFile.mutateAsync({ id: productId, blob });
-      
       toast.success('File uploaded successfully');
-      setUploadStates(prev => ({
-        ...prev,
-        [productId]: { isUploading: false, progress: 100 }
-      }));
+      setUploadStates(prev => {
+        const newStates = { ...prev };
+        delete newStates[productId];
+        return newStates;
+      });
     } catch (error: any) {
-      toast.error(error.message || 'Failed to upload file');
-      setUploadStates(prev => ({
-        ...prev,
-        [productId]: { isUploading: false, progress: 0 }
-      }));
+      const errorMessage = translateAdminError(error);
+      toast.error(errorMessage);
+      setUploadStates(prev => {
+        const newStates = { ...prev };
+        delete newStates[productId];
+        return newStates;
+      });
     }
   };
 
-  const openEditDialog = (product: Product) => {
-    setEditingProduct(product);
-    setFormData({
-      id: product.id,
-      title: product.title,
-      author: product.author,
-      priceInCents: (Number(product.priceInCents) / 100).toFixed(2),
-      categoryId: product.category,
-    });
-  };
-
   return (
-    <div className="page-container section-spacing">
-      {diagnosticsSection}
-      {troubleshootingHint}
-
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <LayoutDashboard className="h-8 w-8" />
-          <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground">Manage your products and inventory</p>
-          </div>
+          <LayoutDashboard className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Product
+        <Button onClick={() => setShowCreateDialog(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Create Product
         </Button>
       </div>
 
+      {diagnosticsSection}
+
+      <AdminUploadsTroubleshootingHint
+        isAuthenticated={!!identity}
+        adminCheckLoading={adminLoading}
+        adminCheckError={adminError}
+        isAdmin={isAdmin}
+        productsLoading={productsLoading}
+        productsError={productsError}
+        adminSystemInitLoading={adminSystemInitLoading}
+        adminSystemInitError={adminSystemInitError}
+        isAdminSystemInitialized={isAdminSystemInitialized}
+        onRetryAdminCheck={refetchAdmin}
+        onRetryProducts={refetchProducts}
+        onRetryAdminSystemInit={refetchAdminSystemInit}
+        onRetryInitialization={handleInitializeAsOwner}
+        isInitializing={initializeStore.isPending}
+      />
+
       {productsLoading ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-64" />
           ))}
         </div>
-      ) : products && products.length === 0 ? (
+      ) : productsError ? (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error loading products</AlertTitle>
+          <AlertDescription>{productsErrorMessage}</AlertDescription>
+        </Alert>
+      ) : !products || products.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">No products yet. Create your first product to get started.</p>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <p className="text-muted-foreground mb-4">No products yet</p>
+            <Button onClick={() => setShowCreateDialog(true)} variant="outline" className="gap-2">
+              <Plus className="h-4 w-4" />
+              Create your first product
+            </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products?.map((product) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products.map((product) => {
             const uploadState = uploadStates[product.id];
             return (
               <Card key={product.id}>
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-lg">{product.title}</CardTitle>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEditDialog(product)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeletingProduct(product)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">by {product.author}</p>
+                  <CardTitle className="flex items-start justify-between gap-2">
+                    <span className="line-clamp-2">{product.title}</span>
+                    <Button
+                      variant={product.isPublished ? 'default' : 'outline'}
+                      size="icon"
+                      onClick={() => handleTogglePublished(product)}
+                      disabled={setPublished.isPending}
+                      className="shrink-0"
+                    >
+                      {product.isPublished ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Price:</span>
-                    <span className="text-sm">${(Number(product.priceInCents) / 100).toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Status:</span>
-                    <span className={`text-sm ${product.isPublished ? 'text-green-600' : 'text-yellow-600'}`}>
+                  <div className="text-sm space-y-1">
+                    <p className="text-muted-foreground">
+                      <span className="font-medium">Author:</span> {product.author}
+                    </p>
+                    <p className="text-muted-foreground">
+                      <span className="font-medium">Price:</span> $
+                      {(Number(product.priceInCents) / 100).toFixed(2)}
+                    </p>
+                    <p className="text-muted-foreground">
+                      <span className="font-medium">Category:</span> {product.category}
+                    </p>
+                    <p className="text-muted-foreground">
+                      <span className="font-medium">Status:</span>{' '}
                       {product.isPublished ? 'Published' : 'Draft'}
-                    </span>
+                    </p>
+                    <p className="text-muted-foreground">
+                      <span className="font-medium">File:</span>{' '}
+                      {product.file ? 'Uploaded' : 'Not uploaded'}
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">File:</span>
-                    <span className="text-sm">{product.file ? 'Uploaded' : 'Not uploaded'}</span>
-                  </div>
-                  
+
                   {uploadState?.isUploading && (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-sm">
-                        <span>Uploading...</span>
-                        <span>{uploadState.progress}%</span>
+                        <span className="text-muted-foreground">Uploading...</span>
+                        <span className="font-medium">{uploadState.progress}%</span>
                       </div>
                       <Progress value={uploadState.progress} />
                     </div>
                   )}
+
+                  {!uploadState?.isUploading && (
+                    <SafeProductUploadAction
+                      productId={product.id}
+                      onFileSelected={(file) => handleFileSelected(product.id, file)}
+                      disabled={uploadFile.isPending}
+                    />
+                  )}
                 </CardContent>
-                <CardFooter className="flex flex-col gap-2">
-                  <SafeProductUploadAction
-                    productId={product.id}
-                    onFileSelected={(file) => handleFileUpload(product.id, file)}
-                    disabled={uploadState?.isUploading}
-                  />
+                <CardFooter className="flex gap-2">
                   <Button
-                    variant={product.isPublished ? 'outline' : 'default'}
-                    className="w-full"
-                    onClick={() => handleTogglePublish(product)}
-                    disabled={setPublished.isPending}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingProduct(product)}
+                    className="flex-1 gap-2"
                   >
-                    {product.isPublished ? (
-                      <>
-                        <EyeOff className="h-4 w-4 mr-2" />
-                        Unpublish
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Publish
-                      </>
-                    )}
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setDeletingProduct(product)}
+                    className="flex-1 gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
                   </Button>
                 </CardFooter>
               </Card>
@@ -643,28 +415,26 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* Create/Edit Product Dialog */}
-      <Dialog open={showCreateDialog || !!editingProduct} onOpenChange={(open) => !open && resetForm()}>
+      {/* Create Product Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingProduct ? 'Edit Product' : 'Create New Product'}</DialogTitle>
+            <DialogTitle>Create New Product</DialogTitle>
             <DialogDescription>
-              {editingProduct ? 'Update the product details below.' : 'Fill in the details to create a new product.'}
+              Add a new product to your store. You can upload the file after creation.
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={editingProduct ? handleUpdate : handleCreate} className="space-y-4">
-            {!editingProduct && (
-              <div className="space-y-2">
-                <Label htmlFor="id">Product ID</Label>
-                <Input
-                  id="id"
-                  value={formData.id}
-                  onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                  placeholder="unique-product-id"
-                  required
-                />
-              </div>
-            )}
+          <form onSubmit={handleCreateProduct} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="id">Product ID</Label>
+              <Input
+                id="id"
+                value={formData.id}
+                onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+                placeholder="unique-product-id"
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
               <Input
@@ -686,15 +456,15 @@ export default function AdminDashboardPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="price">Price (USD)</Label>
+              <Label htmlFor="price">Price (in cents)</Label>
               <Input
                 id="price"
                 type="number"
-                step="0.01"
                 value={formData.priceInCents}
                 onChange={(e) => setFormData({ ...formData, priceInCents: e.target.value })}
-                placeholder="9.99"
+                placeholder="999"
                 required
+                min="0"
               />
             </div>
             <div className="space-y-2">
@@ -702,6 +472,7 @@ export default function AdminDashboardPage() {
               <Select
                 value={formData.categoryId}
                 onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
@@ -709,21 +480,117 @@ export default function AdminDashboardPage() {
                 <SelectContent>
                   {categories?.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
-                      {category.name}
+                      {category.icon} {category.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={resetForm}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowCreateDialog(false)}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={createProduct.isPending || updateProduct.isPending}>
-                {(createProduct.isPending || updateProduct.isPending) && (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Button type="submit" disabled={createProduct.isPending}>
+                {createProduct.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Product'
                 )}
-                {editingProduct ? 'Update' : 'Create'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Product Dialog */}
+      <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Product</DialogTitle>
+            <DialogDescription>
+              Update product information. The product ID cannot be changed.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateProduct} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-id">Product ID</Label>
+              <Input id="edit-id" value={formData.id} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input
+                id="edit-title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Product title"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-author">Author</Label>
+              <Input
+                id="edit-author"
+                value={formData.author}
+                onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                placeholder="Author name"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-price">Price (in cents)</Label>
+              <Input
+                id="edit-price"
+                type="number"
+                value={formData.priceInCents}
+                onChange={(e) => setFormData({ ...formData, priceInCents: e.target.value })}
+                placeholder="999"
+                required
+                min="0"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Category</Label>
+              <Select
+                value={formData.categoryId}
+                onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.icon} {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditingProduct(null)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateProduct.isPending}>
+                {updateProduct.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Product'
+                )}
               </Button>
             </DialogFooter>
           </form>
@@ -731,19 +598,30 @@ export default function AdminDashboardPage() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingProduct} onOpenChange={(open) => !open && setDeletingProduct(null)}>
+      <AlertDialog open={!!deletingProduct} onOpenChange={() => setDeletingProduct(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deletingProduct?.title}"? This action cannot be undone.
+              This will permanently delete "{deletingProduct?.title}". This action cannot be
+              undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleteProduct.isPending}>
-              {deleteProduct.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Delete
+            <AlertDialogAction
+              onClick={handleDeleteProduct}
+              disabled={deleteProduct.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteProduct.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

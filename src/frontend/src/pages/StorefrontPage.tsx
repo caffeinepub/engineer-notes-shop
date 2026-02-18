@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserProfile, useListStorefrontProducts } from '../hooks/useQueries';
+import { useGetCallerUserProfile, useGetStorefrontProducts } from '../hooks/useQueries';
 import StorefrontHero from '../components/StorefrontHero';
 import SearchAndFilterBar from '../components/SearchAndFilterBar';
 import ProductCard from '../components/ProductCard';
@@ -14,7 +14,7 @@ export default function StorefrontPage() {
   const isAuthenticated = !!identity;
   
   const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
-  const { data: products, isLoading, error } = useListStorefrontProducts();
+  const { data: products, isLoading, error } = useGetStorefrontProducts();
   
   const [searchQuery, setSearchQuery] = useState('');
 

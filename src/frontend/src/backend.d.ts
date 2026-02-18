@@ -39,7 +39,6 @@ export enum UserRole {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    claimStoreOwnership(): Promise<void>;
     createCategory(id: string, name: string, icon: string): Promise<void>;
     createProduct(id: string, title: string, author: string, priceInCents: bigint, categoryId: string): Promise<void>;
     deleteCategory(id: string): Promise<void>;
@@ -54,14 +53,13 @@ export interface backendInterface {
     getProducts(): Promise<Array<Product>>;
     getPurchasedProductIds(): Promise<Array<string>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    initializeStore(): Promise<void>;
     isAdminSystemInitialized(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
-    isStoreClaimable(): Promise<boolean>;
     listStorefrontProducts(): Promise<ProductList>;
     listStorefrontProductsByCategory(categoryId: string): Promise<ProductList>;
     purchaseProduct(productId: string): Promise<void>;
     saveCallerUserProfile(userProfile: UserProfile): Promise<UserProfile>;
-    setAdminInitialized(): Promise<void>;
     setProductPublished(id: string, isPublished: boolean): Promise<void>;
     updateProduct(id: string, title: string, author: string, priceInCents: bigint, categoryId: string): Promise<void>;
     uploadProductFile(id: string, blob: ExternalBlob): Promise<void>;

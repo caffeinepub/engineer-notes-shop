@@ -1,9 +1,6 @@
 import Map "mo:core/Map";
 import Set "mo:core/Set";
-import Text "mo:core/Text";
 import Principal "mo:core/Principal";
-import Storage "blob-storage/Storage";
-import AccessControl "authorization/access-control";
 
 module {
   type Category = {
@@ -18,7 +15,7 @@ module {
     author : Text;
     priceInCents : Nat;
     isPublished : Bool;
-    file : ?Storage.ExternalBlob;
+    file : ?Blob;
     category : Text;
   };
 
@@ -26,16 +23,31 @@ module {
     name : Text;
   };
 
-  type Actor = {
-    accessControlState : AccessControl.AccessControlState;
+  type OldActor = {
     categories : Map.Map<Text, Category>;
     products : Map.Map<Text, Product>;
     userProfiles : Map.Map<Principal, UserProfile>;
     purchases : Map.Map<Principal, Set.Set<Text>>;
-    isInitialized : Bool;
+    adminSystemInitialized : Bool;
+    ownerEmail : Text;
+    ownerPrincipal : ?Principal;
   };
 
-  public func run(old : Actor) : Actor {
-    old;
+  type NewActor = {
+    categories : Map.Map<Text, Category>;
+    products : Map.Map<Text, Product>;
+    userProfiles : Map.Map<Principal, UserProfile>;
+    purchases : Map.Map<Principal, Set.Set<Text>>;
+    adminSystemInitialized : Bool;
+  };
+
+  public func run(old : OldActor) : NewActor {
+    {
+      categories = old.categories;
+      products = old.products;
+      userProfiles = old.userProfiles;
+      purchases = old.purchases;
+      adminSystemInitialized = old.adminSystemInitialized;
+    };
   };
 };

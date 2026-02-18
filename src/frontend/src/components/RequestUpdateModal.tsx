@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { getRetryCommand } from '@/utils/deploymentCommands';
+import { getRetryCommand, getUpgradeCommand } from '@/utils/deploymentCommands';
 import { parseDeploymentLog } from '@/utils/deploymentLogParser';
 import { suggestFix } from '@/utils/deploymentFixSuggester';
 import { formatDeploymentReport } from '@/utils/formatDeploymentReport';
@@ -50,6 +50,11 @@ export default function RequestUpdateModal({ open, onOpenChange }: RequestUpdate
   const handleCopyRetryCommand = () => {
     const command = getRetryCommand();
     handleCopyToClipboard(command, 'Retry command copied to clipboard.');
+  };
+
+  const handleCopyUpgradeCommand = () => {
+    const command = getUpgradeCommand();
+    handleCopyToClipboard(command, 'Upgrade command copied to clipboard.');
   };
 
   const handleGenerateReport = () => {
@@ -98,7 +103,7 @@ export default function RequestUpdateModal({ open, onOpenChange }: RequestUpdate
         <Tabs defaultValue="update" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="update">Update Request</TabsTrigger>
-            <TabsTrigger value="retry">Deployment Retry</TabsTrigger>
+            <TabsTrigger value="deploy">Deployment</TabsTrigger>
             <TabsTrigger value="failure">Failure Report</TabsTrigger>
           </TabsList>
 
@@ -122,30 +127,49 @@ export default function RequestUpdateModal({ open, onOpenChange }: RequestUpdate
             </div>
           </TabsContent>
 
-          <TabsContent value="retry" className="space-y-4">
+          <TabsContent value="deploy" className="space-y-4">
             <Alert>
               <Terminal className="h-4 w-4" />
-              <AlertTitle>Retry Deployment</AlertTitle>
+              <AlertTitle>Deployment Commands</AlertTitle>
               <AlertDescription>
-                Use this command to retry the deployment for the current revision. Run it in your terminal and paste the output in the Failure Report tab if it fails.
+                Choose the appropriate command based on your deployment scenario.
               </AlertDescription>
             </Alert>
 
-            <div className="bg-muted p-4 rounded-md font-mono text-sm break-all">
-              {getRetryCommand()}
-            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">Standard Retry</h4>
+                <p className="text-sm text-muted-foreground">
+                  Use this to retry a failed deployment or deploy new changes.
+                </p>
+                <div className="bg-muted p-4 rounded-md font-mono text-sm break-all">
+                  {getRetryCommand()}
+                </div>
+                <Button onClick={handleCopyRetryCommand} variant="outline" size="sm">
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Retry Command
+                </Button>
+              </div>
 
-            <div className="flex justify-end gap-2">
-              <Button onClick={handleCopyRetryCommand}>
-                <Copy className="h-4 w-4 mr-2" />
-                Copy Command
-              </Button>
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">Upgrade Deployment</h4>
+                <p className="text-sm text-muted-foreground">
+                  Use this to upgrade canisters while preserving state, even if code hasn't changed.
+                </p>
+                <div className="bg-muted p-4 rounded-md font-mono text-sm break-all">
+                  {getUpgradeCommand()}
+                </div>
+                <Button onClick={handleCopyUpgradeCommand} variant="outline" size="sm">
+                  <Copy className="h-4 w-4 mr-2" />
+                  Copy Upgrade Command
+                </Button>
+              </div>
             </div>
 
             <div className="text-sm text-muted-foreground space-y-2">
               <p className="font-medium">Instructions:</p>
               <ol className="list-decimal list-inside space-y-1 ml-2">
-                <li>Copy the command above</li>
+                <li>Copy the appropriate command above</li>
                 <li>Run it in your terminal from the project root</li>
                 <li>If deployment fails, copy the full output</li>
                 <li>Paste the output in the "Failure Report" tab for analysis</li>

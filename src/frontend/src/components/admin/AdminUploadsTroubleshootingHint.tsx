@@ -1,20 +1,22 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw } from 'lucide-react';
+import { AlertCircle, RefreshCw, ShieldCheck, Loader2 } from 'lucide-react';
 
 interface AdminUploadsTroubleshootingHintProps {
   isAuthenticated: boolean;
   adminCheckLoading: boolean;
   adminCheckError: boolean;
-  isAdmin?: boolean;
+  isAdmin: boolean | undefined;
   productsLoading: boolean;
   productsError: boolean;
-  adminSystemInitLoading?: boolean;
-  adminSystemInitError?: boolean;
-  isAdminSystemInitialized?: boolean;
-  onRetryAdminCheck?: () => void;
-  onRetryProducts?: () => void;
-  onRetryAdminSystemInit?: () => void;
+  adminSystemInitLoading: boolean;
+  adminSystemInitError: boolean;
+  isAdminSystemInitialized: boolean | undefined;
+  onRetryAdminCheck: () => void;
+  onRetryProducts: () => void;
+  onRetryAdminSystemInit: () => void;
+  onRetryInitialization?: () => void;
+  isInitializing?: boolean;
 }
 
 export default function AdminUploadsTroubleshootingHint({
@@ -30,6 +32,8 @@ export default function AdminUploadsTroubleshootingHint({
   onRetryAdminCheck,
   onRetryProducts,
   onRetryAdminSystemInit,
+  onRetryInitialization,
+  isInitializing = false,
 }: AdminUploadsTroubleshootingHintProps) {
   // Not signed in
   if (!isAuthenticated) {
@@ -38,8 +42,7 @@ export default function AdminUploadsTroubleshootingHint({
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Upload Unavailable</AlertTitle>
         <AlertDescription>
-          Product uploads are only available to the store owner. Please sign in to continue.
-          Check the <strong>Admin Diagnostics</strong> section above for detailed status information.
+          You must be signed in to upload product files. Please sign in using the button in the header. Once signed in, the admin system will be initialized automatically.
         </AlertDescription>
       </Alert>
     );
@@ -50,10 +53,9 @@ export default function AdminUploadsTroubleshootingHint({
     return (
       <Alert className="mb-6">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Upload Unavailable</AlertTitle>
+        <AlertTitle>Checking Admin System</AlertTitle>
         <AlertDescription>
-          Checking admin system configuration. Product uploads will be available once the check completes.
-          Check the <strong>Admin Diagnostics</strong> section above for detailed status information.
+          Verifying admin system configuration. Upload functionality will be available once the check completes.
         </AlertDescription>
       </Alert>
     );
@@ -64,21 +66,39 @@ export default function AdminUploadsTroubleshootingHint({
     return (
       <Alert variant="destructive" className="mb-6">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Upload Unavailable</AlertTitle>
-        <AlertDescription className="space-y-3">
-          <p>
-            Product uploads are unavailable because the admin system configuration check failed. 
-            This may be a temporary network issue.
-          </p>
-          <p>
-            Check the <strong>Admin Diagnostics</strong> section above for detailed error information.
-          </p>
-          {onRetryAdminSystemInit && (
-            <Button onClick={onRetryAdminSystemInit} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retry Admin System Check
+        <AlertTitle>Admin System Check Failed</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>Unable to verify the admin system configuration. Upload functionality is unavailable.</p>
+          <div className="flex gap-2 mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRetryAdminSystemInit}
+            >
+              <RefreshCw className="h-3 w-3 mr-2" />
+              Retry Check
             </Button>
-          )}
+            {onRetryInitialization && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={onRetryInitialization}
+                disabled={isInitializing}
+              >
+                {isInitializing ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                    Initializing...
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="h-3 w-3 mr-2" />
+                    Initialize Now
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </AlertDescription>
       </Alert>
     );
@@ -87,16 +107,32 @@ export default function AdminUploadsTroubleshootingHint({
   // Admin system not initialized
   if (isAdminSystemInitialized === false) {
     return (
-      <Alert variant="destructive" className="mb-6">
+      <Alert className="mb-6">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Upload Unavailable</AlertTitle>
-        <AlertDescription>
-          <p className="mb-2">
-            The admin system has not been initialized yet. Please contact the store owner to initialize the admin system before uploading products.
-          </p>
-          <p>
-            Check the <strong>Admin Diagnostics</strong> section above to see the admin system initialization status.
-          </p>
+        <AlertTitle>Admin System Not Initialized</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>The admin system needs to be initialized before you can upload product files. Click the button below to initialize it now.</p>
+          {onRetryInitialization && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onRetryInitialization}
+              disabled={isInitializing}
+              className="mt-2"
+            >
+              {isInitializing ? (
+                <>
+                  <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                  Initializing...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="h-3 w-3 mr-2" />
+                  Initialize Admin System
+                </>
+              )}
+            </Button>
+          )}
         </AlertDescription>
       </Alert>
     );
@@ -107,10 +143,9 @@ export default function AdminUploadsTroubleshootingHint({
     return (
       <Alert className="mb-6">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Upload Unavailable</AlertTitle>
+        <AlertTitle>Checking Permissions</AlertTitle>
         <AlertDescription>
-          Verifying your admin permissions. Product uploads will be available once the check completes.
-          Check the <strong>Admin Diagnostics</strong> section above for detailed status information.
+          Verifying your admin permissions. Upload functionality will be available once the check completes.
         </AlertDescription>
       </Alert>
     );
@@ -121,65 +156,31 @@ export default function AdminUploadsTroubleshootingHint({
     return (
       <Alert variant="destructive" className="mb-6">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Upload Unavailable</AlertTitle>
-        <AlertDescription className="space-y-3">
-          <p>
-            Product uploads are unavailable because the admin permission check failed. 
-            This may be a temporary network issue.
-          </p>
-          <p>
-            Check the <strong>Admin Diagnostics</strong> section above for detailed error information.
-          </p>
-          {onRetryAdminCheck && (
-            <Button onClick={onRetryAdminCheck} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retry Admin Check
-            </Button>
-          )}
+        <AlertTitle>Permission Check Failed</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>Unable to verify your admin permissions. Upload functionality is unavailable. Check the <strong>Admin Diagnostics</strong> section below for details.</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRetryAdminCheck}
+            className="mt-2"
+          >
+            <RefreshCw className="h-3 w-3 mr-2" />
+            Retry Permission Check
+          </Button>
         </AlertDescription>
       </Alert>
     );
   }
 
-  // Not an admin
+  // Not admin
   if (isAdmin === false) {
     return (
-      <Alert variant="destructive" className="mb-6">
+      <Alert className="mb-6">
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Upload Unavailable</AlertTitle>
         <AlertDescription>
-          <p className="mb-2">
-            Only the store owner or administrator can upload product files. 
-            Your current principal is not recognized as an admin.
-          </p>
-          <p>
-            Check the <strong>Admin Diagnostics</strong> section above to see your principal ID and admin status.
-          </p>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  // Products query error
-  if (productsError) {
-    return (
-      <Alert variant="destructive" className="mb-6">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Upload Unavailable</AlertTitle>
-        <AlertDescription className="space-y-3">
-          <p>
-            Product uploads are unavailable because the products list failed to load. 
-            This may be a temporary network issue.
-          </p>
-          <p>
-            Check the <strong>Admin Diagnostics</strong> section above for detailed error information.
-          </p>
-          {onRetryProducts && (
-            <Button onClick={onRetryProducts} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Retry Loading Products
-            </Button>
-          )}
+          You are not recognized as an admin. To gain admin access, set your profile name to the owner email address. Check the <strong>Store Owner Verification</strong> section above.
         </AlertDescription>
       </Alert>
     );
@@ -190,15 +191,36 @@ export default function AdminUploadsTroubleshootingHint({
     return (
       <Alert className="mb-6">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Upload Unavailable</AlertTitle>
+        <AlertTitle>Loading Products</AlertTitle>
         <AlertDescription>
-          Loading products. Product uploads will be available once loading completes.
-          Check the <strong>Admin Diagnostics</strong> section above for detailed status information.
+          Loading your product list. Upload functionality will be available once products are loaded.
         </AlertDescription>
       </Alert>
     );
   }
 
-  // All checks passed - uploads should be available
+  // Products error
+  if (productsError) {
+    return (
+      <Alert variant="destructive" className="mb-6">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Failed to Load Products</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>Unable to retrieve your product list. Upload functionality is unavailable. Check the <strong>Admin Diagnostics</strong> section below for details.</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRetryProducts}
+            className="mt-2"
+          >
+            <RefreshCw className="h-3 w-3 mr-2" />
+            Retry Loading Products
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  // All checks passed - no hint needed
   return null;
 }

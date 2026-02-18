@@ -20,13 +20,12 @@ import {
 import { Separator } from '@/components/ui/separator';
 import LoginButton from './LoginButton';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserProfile, useIsCallerAdmin, useGetCategories } from '../hooks/useQueries';
+import { useIsCallerAdmin, useGetCategories } from '../hooks/useQueries';
 import { useState } from 'react';
 
 export default function BrandHeader() {
   const navigate = useNavigate();
   const { identity } = useInternetIdentity();
-  const { data: userProfile } = useGetCallerUserProfile();
   const { data: isAdmin, isLoading: adminLoading, isError: adminError } = useIsCallerAdmin();
   const { data: categories } = useGetCategories();
   const isAuthenticated = !!identity;
@@ -40,7 +39,7 @@ export default function BrandHeader() {
   const renderAdminButton = () => {
     if (!isAuthenticated) return null;
 
-    // Admin check loading
+    // Still checking admin status
     if (adminLoading) {
       return (
         <TooltipProvider>
@@ -133,6 +132,7 @@ export default function BrandHeader() {
   const renderMobileAdminItem = () => {
     if (!isAuthenticated) return null;
 
+    // Still checking
     if (adminLoading) {
       return (
         <Button
@@ -142,11 +142,12 @@ export default function BrandHeader() {
           className="w-full justify-start"
         >
           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          Admin (Checking permissions...)
+          Admin (Checking...)
         </Button>
       );
     }
 
+    // Admin check error
     if (adminError) {
       return (
         <Button
@@ -156,11 +157,12 @@ export default function BrandHeader() {
           className="w-full justify-start text-destructive"
         >
           <ShieldAlert className="h-4 w-4 mr-2" />
-          Admin (Permission check failed)
+          Admin (Check failed)
         </Button>
       );
     }
 
+    // Not an admin
     if (isAdmin === false) {
       return (
         <Button
@@ -175,6 +177,7 @@ export default function BrandHeader() {
       );
     }
 
+    // Is admin
     if (isAdmin === true) {
       return (
         <Button
@@ -221,30 +224,26 @@ export default function BrandHeader() {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                >
+                <Button variant="ghost" size="sm">
                   Categories
-                  <ChevronDown className="h-4 w-4 ml-1" />
+                  <ChevronDown className="h-4 w-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate({ to: '/' })}>
-                  All Categories
-                </DropdownMenuItem>
-                {categories && categories.length > 0 && (
-                  <>
-                    {categories.map((category) => (
-                      <DropdownMenuItem
-                        key={category.id}
-                        onClick={() => navigate({ to: `/category/${category.id}` })}
-                      >
-                        {category.icon && <span className="mr-2">{category.icon}</span>}
-                        {category.name}
-                      </DropdownMenuItem>
-                    ))}
-                  </>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Browse by Category</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {categories && categories.length > 0 ? (
+                  categories.map((category) => (
+                    <DropdownMenuItem
+                      key={category.id}
+                      onClick={() => navigate({ to: `/category/${category.id}` })}
+                    >
+                      <span className="mr-2">{category.icon}</span>
+                      {category.name}
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <DropdownMenuItem disabled>No categories available</DropdownMenuItem>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -266,40 +265,27 @@ export default function BrandHeader() {
               variant="ghost"
               size="sm"
               onClick={() => navigate({ to: '/about' })}
-              className="hidden md:inline-flex"
             >
               <Info className="h-4 w-4 mr-2" />
-              About Us
+              About
             </Button>
 
             <Button
               variant="ghost"
               size="sm"
               onClick={() => navigate({ to: '/contact' })}
-              className="hidden md:inline-flex"
             >
               <Mail className="h-4 w-4 mr-2" />
-              Contact Us
+              Contact
             </Button>
 
-            {isAuthenticated && userProfile && (
-              <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-md bg-muted text-sm">
-                <span className="text-muted-foreground">Hello,</span>
-                <span className="font-medium">{userProfile.name}</span>
-              </div>
-            )}
+            <Separator orientation="vertical" className="h-6 mx-2" />
 
             <LoginButton />
           </nav>
 
           {/* Mobile Navigation */}
-          <div className="flex sm:hidden items-center gap-2">
-            {isAuthenticated && userProfile && (
-              <div className="flex items-center gap-2 px-2 py-1 rounded-md bg-muted text-xs">
-                <span className="font-medium">{userProfile.name}</span>
-              </div>
-            )}
-            
+          <div className="sm:hidden">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="sm">
@@ -310,7 +296,7 @@ export default function BrandHeader() {
                 <SheetHeader>
                   <SheetTitle>Menu</SheetTitle>
                 </SheetHeader>
-                <div className="mt-6 flex flex-col gap-1">
+                <div className="flex flex-col gap-2 mt-6">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -322,34 +308,27 @@ export default function BrandHeader() {
                   </Button>
 
                   <Separator className="my-2" />
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+
+                  <div className="text-xs font-semibold text-muted-foreground px-3 py-2">
                     Categories
                   </div>
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleNavigation('/')}
-                    className="w-full justify-start"
-                  >
-                    All Categories
-                  </Button>
-                  
-                  {categories && categories.length > 0 && (
-                    <>
-                      {categories.map((category) => (
-                        <Button
-                          key={category.id}
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleNavigation(`/category/${category.id}`)}
-                          className="w-full justify-start"
-                        >
-                          {category.icon && <span className="mr-2">{category.icon}</span>}
-                          {category.name}
-                        </Button>
-                      ))}
-                    </>
+                  {categories && categories.length > 0 ? (
+                    categories.map((category) => (
+                      <Button
+                        key={category.id}
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleNavigation(`/category/${category.id}`)}
+                        className="w-full justify-start pl-6"
+                      >
+                        <span className="mr-2">{category.icon}</span>
+                        {category.name}
+                      </Button>
+                    ))
+                  ) : (
+                    <div className="text-sm text-muted-foreground px-6 py-2">
+                      No categories available
+                    </div>
                   )}
 
                   <Separator className="my-2" />
@@ -375,7 +354,7 @@ export default function BrandHeader() {
                     className="w-full justify-start"
                   >
                     <Info className="h-4 w-4 mr-2" />
-                    About Us
+                    About
                   </Button>
 
                   <Button
@@ -385,14 +364,12 @@ export default function BrandHeader() {
                     className="w-full justify-start"
                   >
                     <Mail className="h-4 w-4 mr-2" />
-                    Contact Us
+                    Contact
                   </Button>
 
                   <Separator className="my-2" />
 
-                  <div className="px-2 py-2">
-                    <LoginButton variant="mobile" onAuthComplete={() => setMobileMenuOpen(false)} />
-                  </div>
+                  <LoginButton variant="mobile" />
                 </div>
               </SheetContent>
             </Sheet>

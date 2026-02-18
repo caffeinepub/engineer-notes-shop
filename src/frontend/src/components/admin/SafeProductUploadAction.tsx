@@ -1,14 +1,14 @@
-import React, { Component, ReactNode } from 'react';
+import { Component, ReactNode } from 'react';
 import ProductFileUploadButton from './ProductFileUploadButton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 
 interface SafeProductUploadActionProps {
   productId: string;
   onFileSelected: (file: File) => void;
-  disabled?: boolean;
+  onSelectionError?: (message: string) => void;
   isLoading?: boolean;
-  className?: string;
+  disabled?: boolean;
 }
 
 interface SafeProductUploadActionState {
@@ -16,7 +16,10 @@ interface SafeProductUploadActionState {
   errorMessage: string;
 }
 
-class SafeProductUploadAction extends Component<SafeProductUploadActionProps, SafeProductUploadActionState> {
+export default class SafeProductUploadAction extends Component<
+  SafeProductUploadActionProps,
+  SafeProductUploadActionState
+> {
   constructor(props: SafeProductUploadActionProps) {
     super(props);
     this.state = {
@@ -32,17 +35,18 @@ class SafeProductUploadAction extends Component<SafeProductUploadActionProps, Sa
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('ProductFileUploadButton render error:', error, errorInfo);
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error('ProductFileUploadButton error:', error, errorInfo);
   }
 
-  render() {
+  render(): ReactNode {
     if (this.state.hasError) {
       return (
-        <Alert variant="destructive" className="py-2">
+        <Alert variant="destructive" className="w-full">
           <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Upload Control Error</AlertTitle>
           <AlertDescription className="text-xs">
-            Upload control failed to render: {this.state.errorMessage}
+            The upload button failed to render. Error: {this.state.errorMessage}
           </AlertDescription>
         </Alert>
       );
@@ -52,12 +56,10 @@ class SafeProductUploadAction extends Component<SafeProductUploadActionProps, Sa
       <ProductFileUploadButton
         productId={this.props.productId}
         onFileSelected={this.props.onFileSelected}
-        disabled={this.props.disabled}
+        onSelectionError={this.props.onSelectionError}
         isLoading={this.props.isLoading}
-        className={this.props.className}
+        disabled={this.props.disabled}
       />
     );
   }
 }
-
-export default SafeProductUploadAction;

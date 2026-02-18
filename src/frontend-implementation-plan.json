@@ -1,42 +1,36 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Engineer Notes — Claim Store Owner CTA + React Query support",
+  "title": "Fix owner access auto-assignment - Frontend updates",
   "requirements": [
     {
-      "id": "REQ-58",
-      "summary": "Show a tokenless \"Claim Store Owner Access\" call-to-action on /admin when signed in, admin system is initialized, user is not admin, and backend indicates the store is claimable.",
+      "id": "REQ-3",
+      "summary": "Update 'Initialize as Owner' button behavior or remove it if auto-assignment is working",
       "acceptanceCriteria": [
-        "When the user is signed in, admin system is initialized, user is not admin, and the backend indicates the role is claimable, /admin renders a prominent button labeled \"Claim Store Owner Access\".",
-        "Clicking the button triggers the tokenless claim action and then refetches/invalidates relevant admin queries so the page transitions to the fully functional Admin Dashboard without a hard refresh.",
-        "If the backend indicates the role is not claimable, the claim button is not shown and the existing Access Denied behavior remains."
+        "Either the button successfully grants owner access when clicked and shows a success confirmation",
+        "Or the button is removed from the Access Denied screen if auto-assignment on login is working",
+        "The user experience is clear and does not present non-functional UI elements"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/AdminDashboardPage.tsx",
+          "path": "frontend/src/components/AccessDeniedScreen.tsx",
           "operation": "modify",
-          "description": "Add claimable-state handling for the non-admin branch: use store-claimable diagnostics and render a prominent \"Claim Store Owner Access\" button when eligible; on success, rely on React Query invalidations/refetch to transition to the functional Admin Dashboard without refresh; on failure, show a clear English error and keep the page usable. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-59",
-      "summary": "Extend the React Query layer with a claim-owner mutation and store-claimable diagnostics query, and invalidate/refetch relevant admin queries after success.",
-      "acceptanceCriteria": [
-        "A new React Query mutation hook exists for the tokenless claim-owner/admin action and is used by /admin.",
-        "On successful claim, React Query invalidates/refetches at least: admin check, admin products list, and admin diagnostics/initialization queries used on the page.",
-        "On failure, the UI shows a clear English error message and does not leave the page in a broken loading state."
-      ],
-      "file_operations": [
+          "description": "Review and potentially remove the 'Initialize as Owner' button and its associated logic. If the backend auto-assignment (REQ-1, REQ-2) is working correctly, this button becomes unnecessary. If the button is retained, ensure it correctly calls the backend initialization method and provides user feedback (success/error toast messages). Add error handling for failed initialization attempts."
+        },
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Add React Query support for the tokenless claim-owner flow: (1) a query hook for backend isStoreClaimable() (with a stable query key), and (2) a mutation hook for claimStoreOwnership() that on success invalidates/refetches admin check, admin products list, admin system initialized status, and the store-claimable query used by /admin. Ensure errors propagate as English messages to the caller for UI display. Verify the component's usage instructions before implementing."
+          "description": "Review the admin initialization mutation hook. If the 'Initialize as Owner' button is retained, ensure the mutation properly invalidates admin status queries after successful initialization so the UI updates immediately. If the button is removed, this mutation may no longer be needed on the frontend."
+        },
+        {
+          "path": "frontend/src/components/admin/AdminDiagnostics.tsx",
+          "operation": "modify",
+          "description": "Ensure the Admin Diagnostics panel correctly reflects the updated admin status after the backend changes (REQ-1, REQ-2). The component should automatically refresh when the user's admin status changes, showing 'Admin Check: ✓ Admin' with a green indicator instead of the red '✗ Not admin' status."
         },
         {
           "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Wire the new React Query hooks into /admin: call the store-claimable query only when signed in and admin system is initialized; use the claim-owner mutation for the CTA; display English error feedback on mutation failure without breaking loading states. Verify the component's usage instructions before implementing."
+          "description": "Review the admin dashboard access control logic to ensure it correctly reflects the user's admin status based on the backend isCallerAdmin() response. Remove or update any hardcoded checks that might be preventing the authenticated principal from accessing admin features. Ensure the page refreshes admin status when needed."
         }
       ]
     }

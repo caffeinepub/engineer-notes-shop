@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams } from '@tanstack/react-router';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserProfile, useListStorefrontProductsByCategory, useGetCategory } from '../hooks/useQueries';
+import { useGetCallerUserProfile, useGetStorefrontProductsByCategory, useGetCategories } from '../hooks/useQueries';
 import SearchAndFilterBar from '../components/SearchAndFilterBar';
 import ProductCard from '../components/ProductCard';
 import ProfileSetupModal from '../components/ProfileSetupModal';
@@ -15,12 +15,14 @@ export default function CategoryStorefrontPage() {
   const isAuthenticated = !!identity;
   
   const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
-  const { data: category, isLoading: categoryLoading } = useGetCategory(categoryId);
-  const { data: products, isLoading, error } = useListStorefrontProductsByCategory(categoryId);
+  const { data: categories, isLoading: categoriesLoading } = useGetCategories();
+  const { data: products, isLoading, error } = useGetStorefrontProductsByCategory(categoryId);
   
   const [searchQuery, setSearchQuery] = useState('');
 
   const showProfileSetup = isAuthenticated && !profileLoading && isFetched && userProfile === null;
+
+  const category = categories?.find(c => c.id === categoryId);
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
@@ -41,7 +43,7 @@ export default function CategoryStorefrontPage() {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div>
-                {categoryLoading ? (
+                {categoriesLoading ? (
                   <Skeleton className="h-8 w-48 mb-2" />
                 ) : (
                   <h2 className="text-3xl font-semibold">

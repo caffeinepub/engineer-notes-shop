@@ -2,29 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-a-frontend-claim-store-owner-access-tokenless-call-to-action-on-admin-that-is-shown-when-the-user-is-signed-in-the-admin-system-is-initialized-the-user-is-not-currently-an-admin-and-backend-diagnostics-indicate-the-admin-role-is-claimable-e-g-no-admins-exist",
-      "featureTitle": "Add a frontend \"Claim Store Owner Access\" (tokenless) call-to-action on /admin that is shown when the user is signed in, the admin system is initialized, the user is not currently an admin, and backend diagnostics indicate the admin role is claimable (e.g., no admins exist).",
+      "featureId": "feature-if-the-initialize-as-owner-button-is-retained-ensure-it-correctly-assigns-owner-access-to-the-authenticated-principal-when-clicked-or-remove-it-entirely-if-auto-assignment-on-first-authentication-is-working-correctly",
+      "featureTitle": "If the 'Initialize as Owner' button is retained, ensure it correctly assigns owner access to the authenticated principal when clicked, or remove it entirely if auto-assignment on first authentication is working correctly",
       "files": [
-        "frontend/src/pages/AdminDashboardPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-58"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-the-react-query-layer-to-support-the-new-tokenless-claim-owner-admin-flow-and-ensure-all-relevant-queries-are-invalidated-refetched-after-success-admin-check-admin-products-and-any-admin-diagnostics-initialization-queries-used-by-admin",
-      "featureTitle": "Update the React Query layer to support the new tokenless claim-owner/admin flow and ensure all relevant queries are invalidated/refetched after success (admin check, admin products, and any admin diagnostics / initialization queries used by /admin).",
-      "files": [
+        "frontend/src/components/AccessDeniedScreen.tsx",
         "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/AdminDashboardPage.tsx"
       ],
@@ -38,7 +19,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-59"
+        "REQ-3"
       ],
       "confidence": "high"
     }
