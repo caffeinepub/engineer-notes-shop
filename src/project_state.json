@@ -1,13 +1,14 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 19,
+  "projectStateVersion": 21,
   "summary": "App to sell the user's engineering books and notes via a simple storefront with upload/listing, pricing, and purchasing.",
   "architectural_notes": [],
   "known_issues": [
     "Deployment failed during packaging/push to the network; user requested a retry.",
     "Admin/Product upload button is not available in the UI; needs to be enabled so the owner can upload product files.",
     "Admin/Product upload button still not available in the UI after the attempted deployment/build; fix not taking effect (possible build/deploy mismatch or UI condition/role gating issue).",
-    "After a successful build (Draft Version 8), the Admin/Product upload button is still not available; issue persists across builds."
+    "After a successful build (Draft Version 8), the Admin/Product upload button is still not available; issue persists across builds.",
+    "After production deployment (Version 9), the Admin/Product upload button is still not visible; issue persists."
   ],
   "isFixRequest": true,
   "existing_features": [
@@ -186,6 +187,30 @@
         "REQ-27"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-make-it-impossible-for-the-admin-dashboard-to-reach-a-state-where-the-user-is-an-admin-with-a-successfully-loaded-admin-product-list-but-the-per-product-upload-pdf-control-is-not-visible-if-the-upload-pdf-control-cannot-be-rendered-for-any-reason-render-an-explicit-user-visible-inline-error-in-its-place-on-that-product-card-explaining-why",
+      "title": "Make it impossible for the Admin Dashboard to reach a state where the user is an admin with a successfully loaded admin product list but the per-product \"Upload PDF\" control is not visible. If the Upload PDF control cannot be rendered for any reason, render an explicit, user-visible inline error in its place on that product card explaining why.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-always-visible-admin-diagnostics-section-at-the-top-of-the-admin-dashboard-that-helps-explain-why-the-upload-pdf-button-might-not-be-visible-including-authentication-status-caller-principal-as-text-admin-check-status-result-admin-products-query-status-result-count-and-any-error-messages-from-those-queries",
+      "title": "Add an always-visible \"Admin Diagnostics\" section at the top of the Admin Dashboard that helps explain why the Upload PDF button might not be visible, including: authentication status, caller principal (as text), admin check status/result, admin products query status/result count, and any error messages from those queries.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-stable-test-selectors-to-the-upload-pdf-control-and-its-container-so-it-can-be-reliably-verified-in-future-builds-e-g-data-testid-on-the-per-product-upload-button-and-on-the-per-product-action-area",
+      "title": "Add stable test selectors to the Upload PDF control and its container so it can be reliably verified in future builds (e.g., data-testid on the per-product upload button and on the per-product action area).",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -239,6 +264,14 @@
       "id": "AR-7",
       "summary": "Add clearer, more prominent UI buttons to guide the owner through uploading notes and selling them (e.g., Admin Dashboard: Create Product, Upload File, Set Price, Publish; plus clearer navigation to Storefront/Library).",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Ensure the backend admin determination is correctly configured so the store owner can be recognized as admin in production (so the Admin Dashboard and upload functionality can be used). If the canister controller/installer is intended to be admin by default, ensure `isCallerAdmin()` returns true for that principal and admin-restricted methods (create/update/delete/publish/upload/getProducts) succeed for that principal.",
+      "reqIds": [
+        "REQ-30"
+      ],
       "status": "pending"
     }
   ],

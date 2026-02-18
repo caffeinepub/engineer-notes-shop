@@ -5,9 +5,9 @@ import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Principal "mo:core/Principal";
+import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import AccessControl "authorization/access-control";
-import Iter "mo:core/Iter";
 import MixinAuthorization "authorization/MixinAuthorization";
 
 actor {

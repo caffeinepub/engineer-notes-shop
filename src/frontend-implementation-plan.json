@@ -1,68 +1,68 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Improve admin gating diagnostics and restore Admin upload button visibility",
+  "title": "Admin Dashboard: Ensure Upload PDF control visibility, diagnostics, and test selectors",
   "requirements": [
     {
-      "id": "REQ-25",
-      "summary": "Add explicit Admin Dashboard diagnostic/error UI for auth, admin check, and admin products query states with clear retry actions.",
+      "id": "REQ-28",
+      "summary": "Guarantee each admin product card renders the Upload PDF control (or an explicit inline error message in the same location) and keep it visible across breakpoints; only disable during that product’s active upload.",
       "acceptanceCriteria": [
-        "If the admin check query fails, the Admin Dashboard shows a visible error state (not a blank/skeleton-only state) with an English explanation and a retry action.",
-        "If the admin products list query fails, the Admin Dashboard shows a visible error state with an English explanation and a retry action.",
-        "If the user is signed in but not an admin, the Access Denied screen (or Admin Dashboard) includes an English message that clearly states the account is not authorized as the store owner/admin (not a generic failure)."
+        "When viewing /admin as an admin and the product grid is rendered, every product card shows a visible \"Upload PDF\" button (or a visible inline error message in the same location if it truly cannot render).",
+        "The Upload PDF control is not hidden by responsive CSS (e.g., not gated behind `hidden` breakpoints) and remains visible on mobile and desktop layouts.",
+        "The Upload PDF button is only disabled during an active upload for that specific product; otherwise it is enabled and clickable."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Replace the current early skeleton-only gating with explicit, user-facing diagnostic states for: (a) not signed in, (b) signed in + admin check loading, (c) admin check error (show English explanation + retry), (d) signed in but not admin (render AccessDeniedScreen with store owner/admin-specific message), and (e) admin products query error (show English explanation + retry). Use the authorization component's admin-check capability (via existing hooks) and ensure diagnostics remain visible even when queries fail. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Ensure the admin check hook and admin products hook expose and are consumed with consistent loading/error semantics (e.g., error surfaced via React Query state, retry/refetch available) so the Admin Dashboard can render actionable error UI. Use this to support authorization component-driven role gating. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/AccessDeniedScreen.tsx",
-          "operation": "modify",
-          "description": "Adjust/extend the component to better support admin gating clarity (e.g., accept and render a specific English message for store owner/admin authorization failures) while keeping the existing default message behavior intact."
-        }
-      ]
-    },
-    {
-      "id": "REQ-26",
-      "summary": "Ensure each admin product card always renders an enabled Upload PDF button when appropriate, and isolate upload disabling/progress to the specific product being uploaded.",
-      "acceptanceCriteria": [
-        "For an admin user with at least one product returned by the admin products query, each product card shows an \"Upload PDF\" button.",
-        "The \"Upload PDF\" button is only disabled while an upload is actively in progress for that specific product (and remains enabled for other products).",
-        "Clicking \"Upload PDF\" opens the file picker and selecting a PDF triggers the existing upload flow and shows progress on that product card."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/AdminDashboardPage.tsx",
-          "operation": "modify",
-          "description": "Decouple Upload PDF button rendering/enabled state from unrelated page-level loading states (e.g., ensure the product grid and its buttons render whenever products are loaded and admin is true). Preserve per-product uploadStates behavior so only the active product’s Upload PDF button disables and shows progress, and other products remain interactive. This continues using blob-storage ExternalBlob upload progress for per-product progress UI. Verify the component's usage instructions before implementing."
+          "description": "Refactor the per-product action area to render a dedicated upload action slot that always shows either the ProductFileUploadButton or a user-visible inline error message in the same location; ensure the slot/container uses non-hidden layout classes across breakpoints and that disabled state is driven only by the product-specific uploadStates entry."
         },
         {
           "path": "frontend/src/components/admin/ProductFileUploadButton.tsx",
           "operation": "modify",
-          "description": "Confirm the button remains visibly clickable whenever not explicitly disabled for its own upload-in-progress state, and that the click reliably triggers the file picker. Keep English labeling and avoid coupling disabled state to any parent-level loading beyond the explicit props. Verify the blob-storage component's usage instructions before implementing."
+          "description": "Harden rendering for the Upload PDF control: add a stable wrapper/container element for layout consistency, ensure the visible Button is never gated behind responsive `hidden` classes, and support a clear failure mode contract (e.g., allow the parent to render an inline error while keeping this component focused on the button/input behavior). Do not edit shadcn components; compose them instead."
         }
       ]
     },
     {
-      "id": "REQ-27",
-      "summary": "Make Admin navigation discoverable in the header during admin-status loading, failure, and unauthorized states with clear English indications.",
+      "id": "REQ-29",
+      "summary": "Add an always-visible Admin Diagnostics section at the top of the Admin Dashboard showing auth/principal/admin check/products query status, counts, and captured error messages.",
       "acceptanceCriteria": [
-        "When the user is authenticated and the admin check is still loading, the header shows an Admin navigation entry in a disabled/loading state with English text indicating it is checking permissions.",
-        "When the user is authenticated and the admin check resolves to false, the header still shows an Admin navigation entry but indicates in English that the user is not authorized (and/or still allows navigation to /admin where the Access Denied messaging is shown).",
-        "When the user is an admin, the Admin navigation entry is enabled and navigates to /admin."
+        "When not signed in, the page clearly states sign-in is required (existing behavior is OK) and also shows that admin diagnostics are unavailable without authentication.",
+        "When signed in but not admin, the UI clearly states \"Not authorized as store owner\" and the diagnostics show the admin check result as false.",
+        "When admin check or admin products query fails, diagnostics show the captured error message string in English.",
+        "When admin products load successfully, diagnostics show a non-zero or zero product count accurately."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/BrandHeader.tsx",
+          "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Update the header to always show an Admin nav entry for authenticated users, using authorization component-driven admin check state: (1) loading → show disabled entry with English \"Checking permissions…\" text, (2) non-admin → show entry that clearly indicates \"Not authorized\" (either disabled with explanation or navigable to /admin where AccessDeniedScreen provides the detailed message), (3) admin → enabled navigation to /admin. Also handle admin-check query error by showing an Admin entry that indicates permission status could not be determined in English. Verify the component's usage instructions before implementing."
+          "description": "Restructure AdminDashboardPage to always render a top-of-page \"Admin Diagnostics\" section (even when unauthenticated or unauthorized) that includes: authentication status, caller principal text (when available), admin check status/result, admin products query status and result count, and any error message strings from those queries; keep existing sign-in required and AccessDeniedScreen behavior while ensuring diagnostics remain visible above/alongside those states."
+        },
+        {
+          "path": "frontend/src/components/admin/AdminDiagnostics.tsx",
+          "operation": "create",
+          "description": "Create a small AdminDiagnostics component (composed from existing shadcn/ui primitives) to present the required diagnostic fields consistently; pass in query/loading/error/result props from AdminDashboardPage and render human-readable English status strings. Verify the component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-31",
+      "summary": "Add deterministic data-testid selectors for the per-product Upload PDF action area, upload button, and inline error replacement.",
+      "acceptanceCriteria": [
+        "Each product card renders a unique, deterministic test id for its upload action (e.g., includes the product id).",
+        "If the upload control is replaced by an inline error message (REQ-28), that message also has a deterministic test id for the same product id."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Add deterministic test selectors for each product’s upload action area container (e.g., data-testid including product.id), and ensure the inline error replacement (when Upload PDF cannot render) also includes a deterministic data-testid keyed by the same product id."
+        },
+        {
+          "path": "frontend/src/components/admin/ProductFileUploadButton.tsx",
+          "operation": "modify",
+          "description": "Add support for deterministic test selectors on the Upload PDF control (e.g., accept productId or explicit testId props) and apply data-testid to the rendered visible Button so tests can reliably find the per-product upload control."
         }
       ]
     }

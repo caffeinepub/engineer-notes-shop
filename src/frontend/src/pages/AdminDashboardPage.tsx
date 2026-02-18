@@ -3,6 +3,7 @@ import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useIsCallerAdmin, useGetAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useSetProductPublished, useUploadProductFile } from '../hooks/useQueries';
 import AccessDeniedScreen from '../components/AccessDeniedScreen';
 import ProductFileUploadButton from '../components/admin/ProductFileUploadButton';
+import AdminDiagnostics from '../components/admin/AdminDiagnostics';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -45,10 +46,31 @@ export default function AdminDashboardPage() {
     priceInCents: '',
   });
 
+  const principalText = identity?.getPrincipal().toString();
+  const adminErrorMessage = adminErrorObj instanceof Error ? adminErrorObj.message : String(adminErrorObj || 'Unknown error');
+  const productsErrorMessage = productsErrorObj instanceof Error ? productsErrorObj.message : String(productsErrorObj || 'Unknown error');
+
+  // Always show diagnostics at the top
+  const diagnosticsSection = (
+    <AdminDiagnostics
+      isAuthenticated={!!identity}
+      principalText={principalText}
+      adminCheckLoading={adminLoading}
+      adminCheckError={adminError}
+      adminCheckErrorMessage={adminErrorMessage}
+      isAdmin={isAdmin}
+      productsLoading={productsLoading}
+      productsError={productsError}
+      productsErrorMessage={productsErrorMessage}
+      productsCount={products?.length}
+    />
+  );
+
   // Not signed in
   if (!identity) {
     return (
       <div className="page-container section-spacing">
+        {diagnosticsSection}
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Authentication Required</AlertTitle>
@@ -64,6 +86,7 @@ export default function AdminDashboardPage() {
   if (adminLoading) {
     return (
       <div className="page-container section-spacing">
+        {diagnosticsSection}
         <div className="flex items-center gap-3 mb-8">
           <LayoutDashboard className="h-8 w-8" />
           <div>
@@ -84,13 +107,14 @@ export default function AdminDashboardPage() {
   if (adminError) {
     return (
       <div className="page-container section-spacing">
+        {diagnosticsSection}
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Permission Check Failed</AlertTitle>
           <AlertDescription className="mt-2">
             Unable to verify your admin permissions. This may be a temporary network issue.
             <div className="mt-3">
-              <strong>Error:</strong> {adminErrorObj instanceof Error ? adminErrorObj.message : 'Unknown error'}
+              <strong>Error:</strong> {adminErrorMessage}
             </div>
           </AlertDescription>
         </Alert>
@@ -107,9 +131,12 @@ export default function AdminDashboardPage() {
   // Not an admin
   if (isAdmin === false) {
     return (
-      <AccessDeniedScreen 
-        message="You are not authorized as the store owner or administrator. Only the store owner can access the Admin Dashboard to manage products and inventory."
-      />
+      <div className="page-container section-spacing">
+        {diagnosticsSection}
+        <AccessDeniedScreen 
+          message="You are not authorized as the store owner or administrator. Only the store owner can access the Admin Dashboard to manage products and inventory."
+        />
+      </div>
     );
   }
 
@@ -117,6 +144,7 @@ export default function AdminDashboardPage() {
   if (productsError) {
     return (
       <div className="page-container section-spacing">
+        {diagnosticsSection}
         <div className="flex items-center gap-3 mb-8">
           <LayoutDashboard className="h-8 w-8" />
           <div>
@@ -130,7 +158,7 @@ export default function AdminDashboardPage() {
           <AlertDescription className="mt-2">
             Unable to retrieve your product list. This may be a temporary network issue.
             <div className="mt-3">
-              <strong>Error:</strong> {productsErrorObj instanceof Error ? productsErrorObj.message : 'Unknown error'}
+              <strong>Error:</strong> {productsErrorMessage}
             </div>
           </AlertDescription>
         </Alert>
@@ -249,6 +277,8 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="page-container section-spacing">
+      {diagnosticsSection}
+      
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <LayoutDashboard className="h-8 w-8" />
@@ -283,7 +313,7 @@ export default function AdminDashboardPage() {
             const uploadProgress = uploadState?.progress || 0;
 
             return (
-              <Card key={product.id}>
+              <Card key={product.id} data-testid={`product-card-${product.id}`}>
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg line-clamp-2">{product.title}</CardTitle>
@@ -345,12 +375,18 @@ export default function AdminDashboardPage() {
                     <Edit className="h-4 w-4 mr-1" />
                     Edit
                   </Button>
-                  <ProductFileUploadButton
-                    onFileSelected={(file) => handleFileUpload(product.id, file)}
-                    disabled={isUploading}
-                    isLoading={isUploading}
-                    className="flex-1 min-w-[120px]"
-                  />
+                  <div 
+                    className="flex-1 min-w-[120px]" 
+                    data-testid={`upload-action-${product.id}`}
+                  >
+                    <ProductFileUploadButton
+                      productId={product.id}
+                      onFileSelected={(file) => handleFileUpload(product.id, file)}
+                      disabled={isUploading}
+                      isLoading={isUploading}
+                      className="w-full"
+                    />
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"

@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Upload, Loader2 } from 'lucide-react';
 
 interface ProductFileUploadButtonProps {
+  productId: string;
   onFileSelected: (file: File) => void;
   disabled?: boolean;
   isLoading?: boolean;
@@ -10,6 +11,7 @@ interface ProductFileUploadButtonProps {
 }
 
 export default function ProductFileUploadButton({
+  productId,
   onFileSelected,
   disabled = false,
   isLoading = false,
@@ -31,7 +33,7 @@ export default function ProductFileUploadButton({
   };
 
   return (
-    <>
+    <div className="w-full" data-testid={`upload-button-wrapper-${productId}`}>
       <input
         ref={inputRef}
         type="file"
@@ -39,6 +41,7 @@ export default function ProductFileUploadButton({
         onChange={handleFileChange}
         className="hidden"
         disabled={disabled}
+        data-testid={`upload-input-${productId}`}
       />
       <Button
         variant="outline"
@@ -46,6 +49,7 @@ export default function ProductFileUploadButton({
         onClick={handleButtonClick}
         disabled={disabled || isLoading}
         className={className}
+        data-testid={`upload-button-${productId}`}
       >
         {isLoading ? (
           <Loader2 className="h-4 w-4 mr-1 animate-spin" />
@@ -54,6 +58,6 @@ export default function ProductFileUploadButton({
         )}
         Upload PDF
       </Button>
-    </>
+    </div>
   );
 }

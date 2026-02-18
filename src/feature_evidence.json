@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-on-the-admin-dashboard-page-add-explicit-error-and-diagnostic-ui-for-the-admin-check-and-admin-product-list-queries-so-that-when-the-upload-pdf-button-is-not-available-the-page-explains-whether-the-user-is-a-not-signed-in-b-signed-in-but-not-an-admin-or-c-blocked-due-to-a-loading-query-error",
-      "featureTitle": "On the Admin Dashboard page, add explicit error and diagnostic UI for the admin check and admin product list queries so that when the Upload PDF button is not available, the page explains whether the user is (a) not signed in, (b) signed in but not an admin, or (c) blocked due to a loading/query error.",
+      "featureId": "feature-make-it-impossible-for-the-admin-dashboard-to-reach-a-state-where-the-user-is-an-admin-with-a-successfully-loaded-admin-product-list-but-the-per-product-upload-pdf-control-is-not-visible-if-the-upload-pdf-control-cannot-be-rendered-for-any-reason-render-an-explicit-user-visible-inline-error-in-its-place-on-that-product-card-explaining-why",
+      "featureTitle": "Make it impossible for the Admin Dashboard to reach a state where the user is an admin with a successfully loaded admin product list but the per-product \"Upload PDF\" control is not visible. If the Upload PDF control cannot be rendered for any reason, render an explicit, user-visible inline error in its place on that product card explaining why.",
       "files": [
-        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/components/admin/ProductFileUploadButton.tsx",
         "frontend/src/pages/AdminDashboardPage.tsx"
       ],
       "components": [
@@ -18,14 +18,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-25"
+        "REQ-28"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-ensure-the-admin-dashboard-renders-a-visible-clickable-upload-pdf-button-for-each-product-card-whenever-the-admin-product-list-is-successfully-loaded-and-the-caller-is-an-admin-and-ensure-it-is-not-inadvertently-hidden-disabled-due-to-unrelated-page-level-loading-states",
-      "featureTitle": "Ensure the Admin Dashboard renders a visible, clickable \"Upload PDF\" button for each product card whenever the admin product list is successfully loaded and the caller is an admin, and ensure it is not inadvertently hidden/disabled due to unrelated page-level loading states.",
+      "featureId": "feature-add-an-always-visible-admin-diagnostics-section-at-the-top-of-the-admin-dashboard-that-helps-explain-why-the-upload-pdf-button-might-not-be-visible-including-authentication-status-caller-principal-as-text-admin-check-status-result-admin-products-query-status-result-count-and-any-error-messages-from-those-queries",
+      "featureTitle": "Add an always-visible \"Admin Diagnostics\" section at the top of the Admin Dashboard that helps explain why the Upload PDF button might not be visible, including: authentication status, caller principal (as text), admin check status/result, admin products query status/result count, and any error messages from those queries.",
       "files": [
+        "frontend/src/components/admin/AdminDiagnostics.tsx",
         "frontend/src/pages/AdminDashboardPage.tsx"
       ],
       "components": [
@@ -38,15 +39,16 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-26"
+        "REQ-29"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-in-the-global-header-navigation-make-the-admin-navigation-path-discoverable-even-when-the-admin-status-is-still-loading-or-cannot-be-determined-by-showing-an-admin-entry-that-either-navigates-to-admin-or-clearly-indicates-why-it-is-unavailable-loading-not-authorized",
-      "featureTitle": "In the global header navigation, make the Admin navigation path discoverable even when the admin status is still loading or cannot be determined, by showing an Admin entry that either navigates to /admin or clearly indicates why it is unavailable (loading / not authorized).",
+      "featureId": "feature-add-stable-test-selectors-to-the-upload-pdf-control-and-its-container-so-it-can-be-reliably-verified-in-future-builds-e-g-data-testid-on-the-per-product-upload-button-and-on-the-per-product-action-area",
+      "featureTitle": "Add stable test selectors to the Upload PDF control and its container so it can be reliably verified in future builds (e.g., data-testid on the per-product upload button and on the per-product action area).",
       "files": [
-        "frontend/src/components/BrandHeader.tsx"
+        "frontend/src/components/admin/ProductFileUploadButton.tsx",
+        "frontend/src/pages/AdminDashboardPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -58,7 +60,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-27"
+        "REQ-31"
       ],
       "confidence": "high"
     }
