@@ -10,7 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { LayoutDashboard, Plus, Edit, Trash2, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { LayoutDashboard, Plus, Edit, Trash2, Loader2, Eye, EyeOff, AlertCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { ExternalBlob } from '../backend';
 import type { Product } from '../backend';
@@ -23,8 +24,8 @@ interface UploadState {
 
 export default function AdminDashboardPage() {
   const { identity } = useInternetIdentity();
-  const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
-  const { data: products, isLoading: productsLoading } = useGetAdminProducts();
+  const { data: isAdmin, isLoading: adminLoading, isError: adminError, error: adminErrorObj, refetch: refetchAdmin } = useIsCallerAdmin();
+  const { data: products, isLoading: productsLoading, isError: productsError, error: productsErrorObj, refetch: refetchProducts } = useGetAdminProducts();
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -44,17 +45,103 @@ export default function AdminDashboardPage() {
     priceInCents: '',
   });
 
-  if (!identity || adminLoading) {
+  // Not signed in
+  if (!identity) {
     return (
       <div className="page-container section-spacing">
-        <Skeleton className="h-12 w-64 mb-8" />
-        <Skeleton className="h-64" />
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Authentication Required</AlertTitle>
+          <AlertDescription>
+            Please sign in to access the Admin Dashboard.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
 
-  if (!isAdmin) {
-    return <AccessDeniedScreen />;
+  // Admin check loading
+  if (adminLoading) {
+    return (
+      <div className="page-container section-spacing">
+        <div className="flex items-center gap-3 mb-8">
+          <LayoutDashboard className="h-8 w-8" />
+          <div>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Checking permissions...</p>
+          </div>
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <Skeleton key={i} className="h-64" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Admin check error
+  if (adminError) {
+    return (
+      <div className="page-container section-spacing">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Permission Check Failed</AlertTitle>
+          <AlertDescription className="mt-2">
+            Unable to verify your admin permissions. This may be a temporary network issue.
+            <div className="mt-3">
+              <strong>Error:</strong> {adminErrorObj instanceof Error ? adminErrorObj.message : 'Unknown error'}
+            </div>
+          </AlertDescription>
+        </Alert>
+        <div className="mt-4">
+          <Button onClick={() => refetchAdmin()} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry Permission Check
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Not an admin
+  if (isAdmin === false) {
+    return (
+      <AccessDeniedScreen 
+        message="You are not authorized as the store owner or administrator. Only the store owner can access the Admin Dashboard to manage products and inventory."
+      />
+    );
+  }
+
+  // Admin products query error
+  if (productsError) {
+    return (
+      <div className="page-container section-spacing">
+        <div className="flex items-center gap-3 mb-8">
+          <LayoutDashboard className="h-8 w-8" />
+          <div>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Manage your products and inventory</p>
+          </div>
+        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Failed to Load Products</AlertTitle>
+          <AlertDescription className="mt-2">
+            Unable to retrieve your product list. This may be a temporary network issue.
+            <div className="mt-3">
+              <strong>Error:</strong> {productsErrorObj instanceof Error ? productsErrorObj.message : 'Unknown error'}
+            </div>
+          </AlertDescription>
+        </Alert>
+        <div className="mt-4">
+          <Button onClick={() => refetchProducts()} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry Loading Products
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const resetForm = () => {

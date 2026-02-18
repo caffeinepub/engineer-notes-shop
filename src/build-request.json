@@ -1,30 +1,76 @@
 {
   "kind": "build_request",
-  "title": "Retry deployment",
-  "projectName": "Engineer Notes Shop",
-  "priority": "normal",
-  "requirements": [],
+  "title": "Fix missing Admin upload button by improving admin gating and diagnostics",
+  "projectName": "Engineer Notes",
+  "priority": "high",
+  "requirements": [
+    {
+      "id": "REQ-25",
+      "text": "On the Admin Dashboard page, add explicit error and diagnostic UI for the admin check and admin product list queries so that when the Upload PDF button is not available, the page explains whether the user is (a) not signed in, (b) signed in but not an admin, or (c) blocked due to a loading/query error.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "Still not available"
+        ]
+      },
+      "acceptanceCriteria": [
+        "If the admin check query fails, the Admin Dashboard shows a visible error state (not a blank/skeleton-only state) with an English explanation and a retry action.",
+        "If the admin products list query fails, the Admin Dashboard shows a visible error state with an English explanation and a retry action.",
+        "If the user is signed in but not an admin, the Access Denied screen (or Admin Dashboard) includes an English message that clearly states the account is not authorized as the store owner/admin (not a generic failure)."
+      ]
+    },
+    {
+      "id": "REQ-26",
+      "text": "Ensure the Admin Dashboard renders a visible, clickable \"Upload PDF\" button for each product card whenever the admin product list is successfully loaded and the caller is an admin, and ensure it is not inadvertently hidden/disabled due to unrelated page-level loading states.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "Still not available"
+        ]
+      },
+      "acceptanceCriteria": [
+        "For an admin user with at least one product returned by the admin products query, each product card shows an \"Upload PDF\" button.",
+        "The \"Upload PDF\" button is only disabled while an upload is actively in progress for that specific product (and remains enabled for other products).",
+        "Clicking \"Upload PDF\" opens the file picker and selecting a PDF triggers the existing upload flow and shows progress on that product card."
+      ]
+    },
+    {
+      "id": "REQ-27",
+      "text": "In the global header navigation, make the Admin navigation path discoverable even when the admin status is still loading or cannot be determined, by showing an Admin entry that either navigates to /admin or clearly indicates why it is unavailable (loading / not authorized).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "Still not available"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When the user is authenticated and the admin check is still loading, the header shows an Admin navigation entry in a disabled/loading state with English text indicating it is checking permissions.",
+        "When the user is authenticated and the admin check resolves to false, the header still shows an Admin navigation entry but indicates in English that the user is not authorized (and/or still allows navigation to /admin where the Access Denied messaging is shown).",
+        "When the user is an admin, the Admin navigation entry is enabled and navigates to /admin."
+      ]
+    }
+  ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo; add backend/migration.mo only if an upgrade requires state migration.",
-    "Do not edit any frontend files under frontend/src/components/ui or any paths listed in frontend.immutablePaths (compose/read-only components instead).",
+    "Keep all Motoko logic in the single backend actor (backend/main.mo); do not introduce additional backend services.",
+    "Do not edit files in frontend immutablePaths (e.g., frontend/src/hooks/useInternetIdentity.ts(x), frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui).",
     "Use English for any user-facing text."
   ],
   "nonGoals": [
-    "Implement new product, purchase, entitlement, or upload features unrelated to deployment retry.",
-    "Change authentication approach (Internet Identity only)."
+    "Do not add new authentication providers beyond Internet Identity.",
+    "Do not add new product features unrelated to admin upload button visibility/availability (e.g., coupons, subscriptions, external payment processors).",
+    "Do not change the overall product purchase/download flow unless required to fix the missing upload button issue."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

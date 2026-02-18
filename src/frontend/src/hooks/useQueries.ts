@@ -12,6 +12,7 @@ const KEYS = {
   storefrontProducts: ['storefrontProducts'],
   adminProducts: ['adminProducts'],
   purchasedProductIds: ['purchasedProductIds'],
+  purchasedProducts: ['purchasedProducts'],
   product: (id: string) => ['product', id],
 };
 
@@ -61,6 +62,7 @@ export function useGetCallerUserRole() {
       return actor.getCallerUserRole();
     },
     enabled: !!actor && !isFetching,
+    retry: 1,
   });
 }
 
@@ -74,6 +76,7 @@ export function useIsCallerAdmin() {
       return actor.isCallerAdmin();
     },
     enabled: !!actor && !isFetching,
+    retry: 1,
   });
 }
 
@@ -102,6 +105,7 @@ export function useGetAdminProducts() {
       return actor.getProducts();
     },
     enabled: !!actor && !isFetching,
+    retry: 1,
   });
 }
 
@@ -157,9 +161,9 @@ export function useDeleteProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (productId: string) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.deleteProduct(id);
+      return actor.deleteProduct(productId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
@@ -196,13 +200,28 @@ export function useUploadProductFile() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
-      queryClient.invalidateQueries({ queryKey: KEYS.storefrontProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.product(variables.id) });
     },
   });
 }
 
-// Purchase & Entitlements
+// Purchase & Download Hooks
+export function usePurchaseProduct() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (productId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.purchaseProduct(productId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: KEYS.purchasedProductIds });
+      queryClient.invalidateQueries({ queryKey: KEYS.purchasedProducts });
+    },
+  });
+}
+
 export function useGetPurchasedProductIds() {
   const { actor, isFetching } = useActor();
   const { identity } = useInternetIdentity();
@@ -219,43 +238,25 @@ export function useGetPurchasedProductIds() {
 
 export function useGetPurchasedProducts() {
   const { actor, isFetching } = useActor();
-  const { data: purchasedIds, isLoading: idsLoading } = useGetPurchasedProductIds();
+  const { identity } = useInternetIdentity();
 
   return useQuery<Product[]>({
-    queryKey: ['purchasedProducts', purchasedIds],
+    queryKey: KEYS.purchasedProducts,
     queryFn: async () => {
-      if (!actor || !purchasedIds || purchasedIds.length === 0) return [];
+      if (!actor) throw new Error('Actor not available');
+      const productIds = await actor.getPurchasedProductIds();
       
+      if (productIds.length === 0) {
+        return [];
+      }
+
       const products = await Promise.all(
-        purchasedIds.map(async (id) => {
-          try {
-            return await actor.getProduct(id);
-          } catch (error) {
-            console.error(`Failed to fetch product ${id}:`, error);
-            return null;
-          }
-        })
+        productIds.map(id => actor.getProduct(id))
       );
       
-      return products.filter((p): p is Product => p !== null);
+      return products;
     },
-    enabled: !!actor && !isFetching && !idsLoading && !!purchasedIds,
-  });
-}
-
-export function usePurchaseProduct() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (productId: string) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.purchaseProduct(productId);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: KEYS.purchasedProductIds });
-      queryClient.invalidateQueries({ queryKey: ['purchasedProducts'] });
-    },
+    enabled: !!actor && !isFetching && !!identity,
   });
 }
 

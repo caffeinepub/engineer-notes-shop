@@ -1,12 +1,13 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 17,
+  "projectStateVersion": 19,
   "summary": "App to sell the user's engineering books and notes via a simple storefront with upload/listing, pricing, and purchasing.",
   "architectural_notes": [],
   "known_issues": [
     "Deployment failed during packaging/push to the network; user requested a retry.",
     "Admin/Product upload button is not available in the UI; needs to be enabled so the owner can upload product files.",
-    "Admin/Product upload button still not available in the UI after the attempted deployment/build; fix not taking effect (possible build/deploy mismatch or UI condition/role gating issue)."
+    "Admin/Product upload button still not available in the UI after the attempted deployment/build; fix not taking effect (possible build/deploy mismatch or UI condition/role gating issue).",
+    "After a successful build (Draft Version 8), the Admin/Product upload button is still not available; issue persists across builds."
   ],
   "isFixRequest": true,
   "existing_features": [
@@ -159,6 +160,30 @@
       "title": "Verify the upload control wiring end-to-end from UI interaction to backend call: selecting a PDF from the \"Upload PDF\" button must trigger the upload mutation and show progress, and on success the product’s file status must update to \"Uploaded\" without requiring a hard refresh.",
       "reqIds": [
         "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-the-admin-dashboard-page-add-explicit-error-and-diagnostic-ui-for-the-admin-check-and-admin-product-list-queries-so-that-when-the-upload-pdf-button-is-not-available-the-page-explains-whether-the-user-is-a-not-signed-in-b-signed-in-but-not-an-admin-or-c-blocked-due-to-a-loading-query-error",
+      "title": "On the Admin Dashboard page, add explicit error and diagnostic UI for the admin check and admin product list queries so that when the Upload PDF button is not available, the page explains whether the user is (a) not signed in, (b) signed in but not an admin, or (c) blocked due to a loading/query error.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-admin-dashboard-renders-a-visible-clickable-upload-pdf-button-for-each-product-card-whenever-the-admin-product-list-is-successfully-loaded-and-the-caller-is-an-admin-and-ensure-it-is-not-inadvertently-hidden-disabled-due-to-unrelated-page-level-loading-states",
+      "title": "Ensure the Admin Dashboard renders a visible, clickable \"Upload PDF\" button for each product card whenever the admin product list is successfully loaded and the caller is an admin, and ensure it is not inadvertently hidden/disabled due to unrelated page-level loading states.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-in-the-global-header-navigation-make-the-admin-navigation-path-discoverable-even-when-the-admin-status-is-still-loading-or-cannot-be-determined-by-showing-an-admin-entry-that-either-navigates-to-admin-or-clearly-indicates-why-it-is-unavailable-loading-not-authorized",
+      "title": "In the global header navigation, make the Admin navigation path discoverable even when the admin status is still loading or cannot be determined, by showing an Admin entry that either navigates to /admin or clearly indicates why it is unavailable (loading / not authorized).",
+      "reqIds": [
+        "REQ-27"
       ],
       "version": 1
     }

@@ -1,20 +1,62 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T23:44:30.496Z",
+  "generatedAt": "2026-02-17T23:59:08.958Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 0,
-    "implemented": 0,
-    "items": []
+    "total": 3,
+    "implemented": 3,
+    "items": [
+      {
+        "id": "REQ-25",
+        "summary": "On the Admin Dashboard page, add explicit error and diagnostic UI for the admin check and admin product list queries so that when the Upload PDF button is not available, the page explains whether the user is (a) not signed in, (b) signed in but not an admin, or (c) blocked due to a loading/query error.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/AdminDashboardPage.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/AccessDeniedScreen.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/AdminDashboardPage.tsx",
+          "frontend/src/hooks/useQueries.ts"
+        ]
+      },
+      {
+        "id": "REQ-26",
+        "summary": "Ensure the Admin Dashboard renders a visible, clickable \"Upload PDF\" button for each product card whenever the admin product list is successfully loaded and the caller is an admin, and ensure it is not inadvertently hidden/disabled due to unrelated page-level loading states.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/pages/AdminDashboardPage.tsx",
+          "frontend/src/components/admin/ProductFileUploadButton.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/AdminDashboardPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-27",
+        "summary": "In the global header navigation, make the Admin navigation path discoverable even when the admin status is still loading or cannot be determined, by showing an Admin entry that either navigates to /admin or clearly indicates why it is unavailable (loading / not authorized).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/BrandHeader.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/BrandHeader.tsx"
+        ]
+      }
+    ]
   },
   "changedFiles": [
     "build-request.json",
     "feature_evidence.json",
+    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/components/BrandHeader.tsx",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/AdminDashboardPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

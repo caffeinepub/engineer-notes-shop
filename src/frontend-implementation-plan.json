@@ -1,6 +1,70 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Retry deployment (no frontend changes required)",
-  "requirements": []
+  "title": "Improve admin gating diagnostics and restore Admin upload button visibility",
+  "requirements": [
+    {
+      "id": "REQ-25",
+      "summary": "Add explicit Admin Dashboard diagnostic/error UI for auth, admin check, and admin products query states with clear retry actions.",
+      "acceptanceCriteria": [
+        "If the admin check query fails, the Admin Dashboard shows a visible error state (not a blank/skeleton-only state) with an English explanation and a retry action.",
+        "If the admin products list query fails, the Admin Dashboard shows a visible error state with an English explanation and a retry action.",
+        "If the user is signed in but not an admin, the Access Denied screen (or Admin Dashboard) includes an English message that clearly states the account is not authorized as the store owner/admin (not a generic failure)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Replace the current early skeleton-only gating with explicit, user-facing diagnostic states for: (a) not signed in, (b) signed in + admin check loading, (c) admin check error (show English explanation + retry), (d) signed in but not admin (render AccessDeniedScreen with store owner/admin-specific message), and (e) admin products query error (show English explanation + retry). Use the authorization component's admin-check capability (via existing hooks) and ensure diagnostics remain visible even when queries fail. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Ensure the admin check hook and admin products hook expose and are consumed with consistent loading/error semantics (e.g., error surfaced via React Query state, retry/refetch available) so the Admin Dashboard can render actionable error UI. Use this to support authorization component-driven role gating. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/AccessDeniedScreen.tsx",
+          "operation": "modify",
+          "description": "Adjust/extend the component to better support admin gating clarity (e.g., accept and render a specific English message for store owner/admin authorization failures) while keeping the existing default message behavior intact."
+        }
+      ]
+    },
+    {
+      "id": "REQ-26",
+      "summary": "Ensure each admin product card always renders an enabled Upload PDF button when appropriate, and isolate upload disabling/progress to the specific product being uploaded.",
+      "acceptanceCriteria": [
+        "For an admin user with at least one product returned by the admin products query, each product card shows an \"Upload PDF\" button.",
+        "The \"Upload PDF\" button is only disabled while an upload is actively in progress for that specific product (and remains enabled for other products).",
+        "Clicking \"Upload PDF\" opens the file picker and selecting a PDF triggers the existing upload flow and shows progress on that product card."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/AdminDashboardPage.tsx",
+          "operation": "modify",
+          "description": "Decouple Upload PDF button rendering/enabled state from unrelated page-level loading states (e.g., ensure the product grid and its buttons render whenever products are loaded and admin is true). Preserve per-product uploadStates behavior so only the active product’s Upload PDF button disables and shows progress, and other products remain interactive. This continues using blob-storage ExternalBlob upload progress for per-product progress UI. Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/components/admin/ProductFileUploadButton.tsx",
+          "operation": "modify",
+          "description": "Confirm the button remains visibly clickable whenever not explicitly disabled for its own upload-in-progress state, and that the click reliably triggers the file picker. Keep English labeling and avoid coupling disabled state to any parent-level loading beyond the explicit props. Verify the blob-storage component's usage instructions before implementing."
+        }
+      ]
+    },
+    {
+      "id": "REQ-27",
+      "summary": "Make Admin navigation discoverable in the header during admin-status loading, failure, and unauthorized states with clear English indications.",
+      "acceptanceCriteria": [
+        "When the user is authenticated and the admin check is still loading, the header shows an Admin navigation entry in a disabled/loading state with English text indicating it is checking permissions.",
+        "When the user is authenticated and the admin check resolves to false, the header still shows an Admin navigation entry but indicates in English that the user is not authorized (and/or still allows navigation to /admin where the Access Denied messaging is shown).",
+        "When the user is an admin, the Admin navigation entry is enabled and navigates to /admin."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/BrandHeader.tsx",
+          "operation": "modify",
+          "description": "Update the header to always show an Admin nav entry for authenticated users, using authorization component-driven admin check state: (1) loading → show disabled entry with English \"Checking permissions…\" text, (2) non-admin → show entry that clearly indicates \"Not authorized\" (either disabled with explanation or navigable to /admin where AccessDeniedScreen provides the detailed message), (3) admin → enabled navigation to /admin. Also handle admin-check query error by showing an Admin entry that indicates permission status could not be determined in English. Verify the component's usage instructions before implementing."
+        }
+      ]
+    }
+  ]
 }
