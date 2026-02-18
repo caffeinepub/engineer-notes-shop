@@ -93,6 +93,11 @@ export interface _CaffeineStorageRefillResult {
     success?: boolean;
     topped_up_amount?: bigint;
 }
+export interface Category {
+    id: string;
+    icon: string;
+    name: string;
+}
 export type ProductList = Array<Product>;
 export interface _CaffeineStorageRefillInformation {
     proposed_top_up_amount?: bigint;
@@ -110,6 +115,7 @@ export interface Product {
     isPublished: boolean;
     file?: ExternalBlob;
     author: string;
+    category: string;
     priceInCents: bigint;
 }
 export enum UserRole {
@@ -126,22 +132,31 @@ export interface backendInterface {
     _caffeineStorageUpdateGatewayPrincipals(): Promise<void>;
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    createProduct(id: string, title: string, author: string, priceInCents: bigint): Promise<void>;
+    claimStoreOwnership(): Promise<void>;
+    createCategory(id: string, name: string, icon: string): Promise<void>;
+    createProduct(id: string, title: string, author: string, priceInCents: bigint, categoryId: string): Promise<void>;
+    deleteCategory(id: string): Promise<void>;
     deleteProduct(id: string): Promise<void>;
     downloadProductFile(productId: string): Promise<ExternalBlob>;
     getAllUserProfiles(): Promise<Array<[Principal, UserProfile]>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getCategories(): Promise<Array<Category>>;
+    getCategory(id: string): Promise<Category>;
     getProduct(productId: string): Promise<Product>;
     getProducts(): Promise<Array<Product>>;
     getPurchasedProductIds(): Promise<Array<string>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    isAdminSystemInitialized(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
+    isStoreClaimable(): Promise<boolean>;
     listStorefrontProducts(): Promise<ProductList>;
+    listStorefrontProductsByCategory(categoryId: string): Promise<ProductList>;
     purchaseProduct(productId: string): Promise<void>;
     saveCallerUserProfile(userProfile: UserProfile): Promise<UserProfile>;
+    setAdminInitialized(): Promise<void>;
     setProductPublished(id: string, isPublished: boolean): Promise<void>;
-    updateProduct(id: string, title: string, author: string, priceInCents: bigint): Promise<void>;
+    updateProduct(id: string, title: string, author: string, priceInCents: bigint, categoryId: string): Promise<void>;
     uploadProductFile(id: string, blob: ExternalBlob): Promise<void>;
 }
 import type { ExternalBlob as _ExternalBlob, Product as _Product, ProductList as _ProductList, UserProfile as _UserProfile, UserRole as _UserRole, _CaffeineStorageRefillInformation as __CaffeineStorageRefillInformation, _CaffeineStorageRefillResult as __CaffeineStorageRefillResult } from "./declarations/backend.did.d.ts";
@@ -259,17 +274,59 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async createProduct(arg0: string, arg1: string, arg2: string, arg3: bigint): Promise<void> {
+    async claimStoreOwnership(): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.createProduct(arg0, arg1, arg2, arg3);
+                const result = await this.actor.claimStoreOwnership();
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createProduct(arg0, arg1, arg2, arg3);
+            const result = await this.actor.claimStoreOwnership();
+            return result;
+        }
+    }
+    async createCategory(arg0: string, arg1: string, arg2: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createCategory(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createCategory(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async createProduct(arg0: string, arg1: string, arg2: string, arg3: bigint, arg4: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.createProduct(arg0, arg1, arg2, arg3, arg4);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.createProduct(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
+    async deleteCategory(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteCategory(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteCategory(arg0);
             return result;
         }
     }
@@ -343,6 +400,34 @@ export class Backend implements backendInterface {
             return from_candid_UserRole_n12(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getCategories(): Promise<Array<Category>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCategories();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCategories();
+            return result;
+        }
+    }
+    async getCategory(arg0: string): Promise<Category> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCategory(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCategory(arg0);
+            return result;
+        }
+    }
     async getProduct(arg0: string): Promise<Product> {
         if (this.processError) {
             try {
@@ -399,6 +484,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n11(this._uploadFile, this._downloadFile, result);
         }
     }
+    async isAdminSystemInitialized(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isAdminSystemInitialized();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isAdminSystemInitialized();
+            return result;
+        }
+    }
     async isCallerAdmin(): Promise<boolean> {
         if (this.processError) {
             try {
@@ -413,6 +512,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async isStoreClaimable(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isStoreClaimable();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isStoreClaimable();
+            return result;
+        }
+    }
     async listStorefrontProducts(): Promise<ProductList> {
         if (this.processError) {
             try {
@@ -424,6 +537,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.listStorefrontProducts();
+            return from_candid_ProductList_n18(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async listStorefrontProductsByCategory(arg0: string): Promise<ProductList> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.listStorefrontProductsByCategory(arg0);
+                return from_candid_ProductList_n18(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.listStorefrontProductsByCategory(arg0);
             return from_candid_ProductList_n18(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -455,6 +582,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async setAdminInitialized(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setAdminInitialized();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setAdminInitialized();
+            return result;
+        }
+    }
     async setProductPublished(arg0: string, arg1: boolean): Promise<void> {
         if (this.processError) {
             try {
@@ -469,17 +610,17 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateProduct(arg0: string, arg1: string, arg2: string, arg3: bigint): Promise<void> {
+    async updateProduct(arg0: string, arg1: string, arg2: string, arg3: bigint, arg4: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateProduct(arg0, arg1, arg2, arg3);
+                const result = await this.actor.updateProduct(arg0, arg1, arg2, arg3, arg4);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateProduct(arg0, arg1, arg2, arg3);
+            const result = await this.actor.updateProduct(arg0, arg1, arg2, arg3, arg4);
             return result;
         }
     }
@@ -531,6 +672,7 @@ async function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promi
     isPublished: boolean;
     file: [] | [_ExternalBlob];
     author: string;
+    category: string;
     priceInCents: bigint;
 }): Promise<{
     id: string;
@@ -538,6 +680,7 @@ async function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promi
     isPublished: boolean;
     file?: ExternalBlob;
     author: string;
+    category: string;
     priceInCents: bigint;
 }> {
     return {
@@ -546,6 +689,7 @@ async function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promi
         isPublished: value.isPublished,
         file: record_opt_to_undefined(await from_candid_opt_n16(_uploadFile, _downloadFile, value.file)),
         author: value.author,
+        category: value.category,
         priceInCents: value.priceInCents
     };
 }

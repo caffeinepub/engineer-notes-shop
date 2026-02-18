@@ -5,46 +5,126 @@ import Map "mo:core/Map";
 import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Principal "mo:core/Principal";
-import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
+import Migration "migration";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
+(with migration = Migration.run)
 actor {
   include MixinStorage();
 
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  public type Product = {
+  type Category = {
+    id : Text;
+    name : Text;
+    icon : Text;
+  };
+
+  type Product = {
     id : Text;
     title : Text;
     author : Text;
     priceInCents : Nat;
     isPublished : Bool;
     file : ?Storage.ExternalBlob;
+    category : Text;
   };
 
-  public type Purchase = {
-    user : Principal;
-    productId : Text;
-    timestamp : Int;
-  };
+  type ProductList = [Product];
 
-  public type UserProfile = {
+  type UserProfile = {
     name : Text;
   };
 
+  let categories = Map.empty<Text, Category>();
   let products = Map.empty<Text, Product>();
   let userProfiles = Map.empty<Principal, UserProfile>();
   let purchases = Map.empty<Principal, Set.Set<Text>>();
 
-  type ProductList = [Product];
+  var isInitialized = false;
 
-  public shared ({ caller }) func createProduct(id : Text, title : Text, author : Text, priceInCents : Nat) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+  func isAdminClaimable() : Bool {
+    if (not isInitialized) {
+      return false;
+    };
+    not AccessControl.hasPermission(accessControlState, Principal.fromText("aaaaa-aa"), #admin);
+  };
+
+  public shared ({ caller }) func setAdminInitialized() : async () {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Anonymous users cannot initialize the admin system");
+    };
+
+    if (isInitialized) {
+      Runtime.trap("Admin system already initialized");
+    };
+
+    isInitialized := true;
+    AccessControl.initialize(accessControlState, caller, "", "");
+  };
+
+  public query func isAdminSystemInitialized() : async Bool {
+    isInitialized;
+  };
+
+  public shared ({ caller }) func claimStoreOwnership() : async () {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Unauthorized: Anonymous users cannot claim store ownership");
+    };
+
+    if (not isInitialized) {
+      Runtime.trap("Admin system not initialized. Please contact the store owner to initialize the admin system.");
+    };
+
+    if (not isAdminClaimable()) {
+      Runtime.trap("Store ownership already claimed. You are not authorized to claim store ownership.");
+    };
+
+    AccessControl.initialize(accessControlState, caller, "", "");
+  };
+
+  public query func isStoreClaimable() : async Bool {
+    isAdminClaimable();
+  };
+
+  public query ({ caller }) func getCategories() : async [Category] {
+    categories.values().toArray();
+  };
+
+  public query ({ caller }) func getCategory(id : Text) : async Category {
+    switch (categories.get(id)) {
+      case (null) { Runtime.trap("Category not found") };
+      case (?category) { category };
+    };
+  };
+
+  public shared ({ caller }) func createCategory(id : Text, name : Text, icon : Text) : async () {
+    if (not isInitialized) {
+      Runtime.trap("Admin system not initialized. Please contact the store owner to initialize the admin system.");
+    };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
+
+    let category : Category = {
+      id;
+      name;
+      icon;
+    };
+    categories.add(id, category);
+  };
+
+  public shared ({ caller }) func createProduct(id : Text, title : Text, author : Text, priceInCents : Nat, categoryId : Text) : async () {
+    if (not isInitialized) {
+      Runtime.trap("Admin system not initialized. Please contact the store owner to initialize the admin system.");
+    };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+    ignore getCategory(categoryId);
 
     let product : Product = {
       id;
@@ -53,16 +133,22 @@ actor {
       priceInCents;
       isPublished = false;
       file = null;
+      category = categoryId;
     };
     products.add(id, product);
   };
 
-  public shared ({ caller }) func updateProduct(id : Text, title : Text, author : Text, priceInCents : Nat) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+  public shared ({ caller }) func updateProduct(id : Text, title : Text, author : Text, priceInCents : Nat, categoryId : Text) : async () {
+    if (not isInitialized) {
+      Runtime.trap("Admin system not initialized. Please contact the store owner to initialize the admin system.");
+    };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
 
     let product = getProductInternal(id);
+    ignore getCategory(categoryId);
+
     let updatedProduct : Product = {
       id;
       title;
@@ -70,13 +156,31 @@ actor {
       priceInCents;
       isPublished = product.isPublished;
       file = product.file;
+      category = categoryId;
     };
 
     products.add(id, updatedProduct);
   };
 
+  public shared ({ caller }) func deleteCategory(id : Text) : async () {
+    if (not isInitialized) {
+      Runtime.trap("Admin system not initialized. Please contact the store owner to initialize the admin system.");
+    };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can perform this action");
+    };
+
+    switch (categories.get(id)) {
+      case (null) { Runtime.trap("Category not found") };
+      case (?_) { categories.remove(id) };
+    };
+  };
+
   public shared ({ caller }) func deleteProduct(id : Text) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not isInitialized) {
+      Runtime.trap("Admin system not initialized. Please contact the store owner to initialize the admin system.");
+    };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -87,7 +191,10 @@ actor {
   };
 
   public shared ({ caller }) func setProductPublished(id : Text, isPublished : Bool) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not isInitialized) {
+      Runtime.trap("Admin system not initialized. Please contact the store owner to initialize the admin system.");
+    };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -99,13 +206,17 @@ actor {
       priceInCents = product.priceInCents;
       isPublished;
       file = product.file;
+      category = product.category;
     };
 
     products.add(id, updatedProduct);
   };
 
   public shared ({ caller }) func uploadProductFile(id : Text, blob : Storage.ExternalBlob) : async () {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not isInitialized) {
+      Runtime.trap("Admin system not initialized. Please contact the store owner to initialize the admin system.");
+    };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
 
@@ -117,6 +228,7 @@ actor {
       priceInCents = product.priceInCents;
       isPublished = product.isPublished;
       file = ?blob;
+      category = product.category;
     };
 
     products.add(id, updatedProduct);
@@ -124,14 +236,13 @@ actor {
 
   public shared ({ caller }) func purchaseProduct(productId : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can purchase products");
+      Runtime.trap("Unauthorized: You must be signed in to purchase products. Please sign in and try again.");
     };
 
     if (not isProductPublished(productId)) {
       Runtime.trap("Product is not published");
     };
 
-    // Record the purchase
     let userPurchases = switch (purchases.get(caller)) {
       case (null) { Set.empty<Text>() };
       case (?set) { set };
@@ -144,7 +255,6 @@ actor {
   public shared ({ caller }) func getProduct(productId : Text) : async Product {
     let product = getProductInternal(productId);
 
-    // Unpublished products are only visible to admins
     if (not product.isPublished and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Product not found");
     };
@@ -153,15 +263,20 @@ actor {
   };
 
   public query ({ caller }) func listStorefrontProducts() : async ProductList {
+    products.values().toArray().filter(func(product) { product.isPublished });
+  };
+
+  public query ({ caller }) func listStorefrontProductsByCategory(categoryId : Text) : async ProductList {
     products.values().toArray().filter(
-      func(product) { product.isPublished }
+      func(product) {
+        product.isPublished and product.category == categoryId;
+      }
     );
   };
 
   public shared ({ caller }) func downloadProductFile(productId : Text) : async Storage.ExternalBlob {
     let product = getProductInternal(productId);
 
-    // Check if user is admin or has purchased the product
     let isAdmin = AccessControl.isAdmin(accessControlState, caller);
     let hasPurchased = switch (purchases.get(caller)) {
       case (null) { false };
@@ -169,7 +284,7 @@ actor {
     };
 
     if (not isAdmin and not hasPurchased) {
-      Runtime.trap("Unauthorized: Must purchase product to download");
+      Runtime.trap("Unauthorized: You must purchase this product before downloading. Please complete your purchase and try again.");
     };
 
     switch (product.file) {
@@ -179,7 +294,10 @@ actor {
   };
 
   public query ({ caller }) func getProducts() : async [Product] {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not isInitialized) {
+      Runtime.trap("Admin system not initialized. Please contact the store owner to initialize the admin system.");
+    };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
     products.values().toArray();
@@ -187,7 +305,7 @@ actor {
 
   public query ({ caller }) func getPurchasedProductIds() : async [Text] {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can view purchases");
+      Runtime.trap("Unauthorized: You must be signed in to view your purchases. Please sign in and try again.");
     };
 
     switch (purchases.get(caller)) {
@@ -212,7 +330,7 @@ actor {
 
   public shared ({ caller }) func saveCallerUserProfile(userProfile : UserProfile) : async UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save profiles");
+      Runtime.trap("Unauthorized: You must be signed in to save your profile. Please sign in and try again.");
     };
     userProfiles.add(caller, userProfile);
     userProfile;
@@ -220,20 +338,23 @@ actor {
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only users can save profiles");
+      Runtime.trap("Unauthorized: You must be signed in to view your profile. Please sign in and try again.");
     };
     userProfiles.get(caller);
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Can only view your own profile");
+      Runtime.trap("Unauthorized: You can only view your own profile unless you are an admin.");
     };
     userProfiles.get(user);
   };
 
   public query ({ caller }) func getAllUserProfiles() : async [(Principal, UserProfile)] {
-    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+    if (not isInitialized) {
+      Runtime.trap("Admin system not initialized. Please contact the store owner to initialize the admin system.");
+    };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
     };
     userProfiles.toArray();

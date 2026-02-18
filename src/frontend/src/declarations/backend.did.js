@@ -26,12 +26,18 @@ export const UserRole = IDL.Variant({
 });
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const UserProfile = IDL.Record({ 'name' : IDL.Text });
+export const Category = IDL.Record({
+  'id' : IDL.Text,
+  'icon' : IDL.Text,
+  'name' : IDL.Text,
+});
 export const Product = IDL.Record({
   'id' : IDL.Text,
   'title' : IDL.Text,
   'isPublished' : IDL.Bool,
   'file' : IDL.Opt(ExternalBlob),
   'author' : IDL.Text,
+  'category' : IDL.Text,
   'priceInCents' : IDL.Nat,
 });
 export const ProductList = IDL.Vec(Product);
@@ -65,7 +71,14 @@ export const idlService = IDL.Service({
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'createProduct' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Nat], [], []),
+  'claimStoreOwnership' : IDL.Func([], [], []),
+  'createCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+  'createProduct' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
+      [],
+      [],
+    ),
+  'deleteCategory' : IDL.Func([IDL.Text], [], []),
   'deleteProduct' : IDL.Func([IDL.Text], [], []),
   'downloadProductFile' : IDL.Func([IDL.Text], [ExternalBlob], []),
   'getAllUserProfiles' : IDL.Func(
@@ -75,6 +88,8 @@ export const idlService = IDL.Service({
     ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+  'getCategory' : IDL.Func([IDL.Text], [Category], ['query']),
   'getProduct' : IDL.Func([IDL.Text], [Product], []),
   'getProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
   'getPurchasedProductIds' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
@@ -83,12 +98,24 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'isAdminSystemInitialized' : IDL.Func([], [IDL.Bool], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'isStoreClaimable' : IDL.Func([], [IDL.Bool], ['query']),
   'listStorefrontProducts' : IDL.Func([], [ProductList], ['query']),
+  'listStorefrontProductsByCategory' : IDL.Func(
+      [IDL.Text],
+      [ProductList],
+      ['query'],
+    ),
   'purchaseProduct' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [UserProfile], []),
+  'setAdminInitialized' : IDL.Func([], [], []),
   'setProductPublished' : IDL.Func([IDL.Text, IDL.Bool], [], []),
-  'updateProduct' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Nat], [], []),
+  'updateProduct' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
+      [],
+      [],
+    ),
   'uploadProductFile' : IDL.Func([IDL.Text, ExternalBlob], [], []),
 });
 
@@ -113,12 +140,18 @@ export const idlFactory = ({ IDL }) => {
   });
   const ExternalBlob = IDL.Vec(IDL.Nat8);
   const UserProfile = IDL.Record({ 'name' : IDL.Text });
+  const Category = IDL.Record({
+    'id' : IDL.Text,
+    'icon' : IDL.Text,
+    'name' : IDL.Text,
+  });
   const Product = IDL.Record({
     'id' : IDL.Text,
     'title' : IDL.Text,
     'isPublished' : IDL.Bool,
     'file' : IDL.Opt(ExternalBlob),
     'author' : IDL.Text,
+    'category' : IDL.Text,
     'priceInCents' : IDL.Nat,
   });
   const ProductList = IDL.Vec(Product);
@@ -152,7 +185,14 @@ export const idlFactory = ({ IDL }) => {
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'createProduct' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Nat], [], []),
+    'claimStoreOwnership' : IDL.Func([], [], []),
+    'createCategory' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+    'createProduct' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
+        [],
+        [],
+      ),
+    'deleteCategory' : IDL.Func([IDL.Text], [], []),
     'deleteProduct' : IDL.Func([IDL.Text], [], []),
     'downloadProductFile' : IDL.Func([IDL.Text], [ExternalBlob], []),
     'getAllUserProfiles' : IDL.Func(
@@ -162,6 +202,8 @@ export const idlFactory = ({ IDL }) => {
       ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getCategories' : IDL.Func([], [IDL.Vec(Category)], ['query']),
+    'getCategory' : IDL.Func([IDL.Text], [Category], ['query']),
     'getProduct' : IDL.Func([IDL.Text], [Product], []),
     'getProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
     'getPurchasedProductIds' : IDL.Func([], [IDL.Vec(IDL.Text)], ['query']),
@@ -170,12 +212,24 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'isAdminSystemInitialized' : IDL.Func([], [IDL.Bool], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'isStoreClaimable' : IDL.Func([], [IDL.Bool], ['query']),
     'listStorefrontProducts' : IDL.Func([], [ProductList], ['query']),
+    'listStorefrontProductsByCategory' : IDL.Func(
+        [IDL.Text],
+        [ProductList],
+        ['query'],
+      ),
     'purchaseProduct' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [UserProfile], []),
+    'setAdminInitialized' : IDL.Func([], [], []),
     'setProductPublished' : IDL.Func([IDL.Text, IDL.Bool], [], []),
-    'updateProduct' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Nat], [], []),
+    'updateProduct' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Nat, IDL.Text],
+        [],
+        [],
+      ),
     'uploadProductFile' : IDL.Func([IDL.Text, ExternalBlob], [], []),
   });
 };

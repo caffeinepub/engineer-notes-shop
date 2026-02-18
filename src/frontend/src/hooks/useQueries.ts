@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
 import { useInternetIdentity } from './useInternetIdentity';
-import type { UserProfile, Product, UserRole } from '../backend';
+import type { UserProfile, Product, UserRole, Category } from '../backend';
 import { ExternalBlob } from '../backend';
 
 // Query Keys
@@ -9,11 +9,16 @@ const KEYS = {
   userProfile: ['currentUserProfile'],
   userRole: ['currentUserRole'],
   isAdmin: ['isAdmin'],
+  adminSystemInitialized: ['adminSystemInitialized'],
+  storeClaimable: ['storeClaimable'],
   storefrontProducts: ['storefrontProducts'],
+  storefrontProductsByCategory: (categoryId: string) => ['storefrontProducts', 'category', categoryId],
   adminProducts: ['adminProducts'],
   purchasedProductIds: ['purchasedProductIds'],
   purchasedProducts: ['purchasedProducts'],
   product: (id: string) => ['product', id],
+  categories: ['categories'],
+  category: (id: string) => ['category', id],
 };
 
 // Auth & Profile Hooks
@@ -80,6 +85,135 @@ export function useIsCallerAdmin() {
   });
 }
 
+export function useIsAdminSystemInitialized() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<boolean>({
+    queryKey: KEYS.adminSystemInitialized,
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.isAdminSystemInitialized();
+    },
+    enabled: !!actor && !isFetching,
+    retry: 1,
+  });
+}
+
+export function useInitializeAdminSystem() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.setAdminInitialized();
+    },
+    onSuccess: async () => {
+      // Invalidate and refetch all admin-related queries
+      await queryClient.invalidateQueries({ queryKey: KEYS.adminSystemInitialized });
+      await queryClient.invalidateQueries({ queryKey: KEYS.isAdmin });
+      await queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
+      await queryClient.invalidateQueries({ queryKey: KEYS.storeClaimable });
+      await queryClient.refetchQueries({ queryKey: KEYS.adminSystemInitialized });
+      await queryClient.refetchQueries({ queryKey: KEYS.isAdmin });
+    },
+  });
+}
+
+export function useIsStoreClaimable() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<boolean>({
+    queryKey: KEYS.storeClaimable,
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.isStoreClaimable();
+    },
+    enabled: !!actor && !isFetching,
+    retry: 1,
+  });
+}
+
+export function useClaimStoreOwnership() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.claimStoreOwnership();
+    },
+    onSuccess: async () => {
+      // Invalidate and refetch all admin-related queries
+      await queryClient.invalidateQueries({ queryKey: KEYS.isAdmin });
+      await queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
+      await queryClient.invalidateQueries({ queryKey: KEYS.adminSystemInitialized });
+      await queryClient.invalidateQueries({ queryKey: KEYS.storeClaimable });
+      await queryClient.refetchQueries({ queryKey: KEYS.isAdmin });
+      await queryClient.refetchQueries({ queryKey: KEYS.adminProducts });
+      await queryClient.refetchQueries({ queryKey: KEYS.adminSystemInitialized });
+      await queryClient.refetchQueries({ queryKey: KEYS.storeClaimable });
+    },
+  });
+}
+
+// Category Hooks
+export function useGetCategories() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Category[]>({
+    queryKey: KEYS.categories,
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getCategories();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetCategory(categoryId: string) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Category>({
+    queryKey: KEYS.category(categoryId),
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getCategory(categoryId);
+    },
+    enabled: !!actor && !isFetching && !!categoryId,
+  });
+}
+
+export function useCreateCategory() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { id: string; name: string; icon: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.createCategory(params.id, params.name, params.icon);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: KEYS.categories });
+    },
+  });
+}
+
+export function useDeleteCategory() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (categoryId: string) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deleteCategory(categoryId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: KEYS.categories });
+    },
+  });
+}
+
 // Product Hooks - Public Storefront (published only)
 export function useListStorefrontProducts() {
   const { actor, isFetching } = useActor();
@@ -91,6 +225,19 @@ export function useListStorefrontProducts() {
       return actor.listStorefrontProducts();
     },
     enabled: !!actor && !isFetching,
+  });
+}
+
+export function useListStorefrontProductsByCategory(categoryId: string) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Product[]>({
+    queryKey: KEYS.storefrontProductsByCategory(categoryId),
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.listStorefrontProductsByCategory(categoryId);
+    },
+    enabled: !!actor && !isFetching && !!categoryId,
   });
 }
 
@@ -128,13 +275,15 @@ export function useCreateProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { id: string; title: string; author: string; priceInCents: bigint }) => {
+    mutationFn: async (params: { id: string; title: string; author: string; priceInCents: bigint; categoryId: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createProduct(params.id, params.title, params.author, params.priceInCents);
+      return actor.createProduct(params.id, params.title, params.author, params.priceInCents, params.categoryId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.storefrontProducts });
+      // Invalidate all category-specific queries
+      queryClient.invalidateQueries({ queryKey: ['storefrontProducts', 'category'] });
     },
   });
 }
@@ -144,14 +293,16 @@ export function useUpdateProduct() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: { id: string; title: string; author: string; priceInCents: bigint }) => {
+    mutationFn: async (params: { id: string; title: string; author: string; priceInCents: bigint; categoryId: string }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.updateProduct(params.id, params.title, params.author, params.priceInCents);
+      return actor.updateProduct(params.id, params.title, params.author, params.priceInCents, params.categoryId);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.storefrontProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.product(variables.id) });
+      // Invalidate all category-specific queries
+      queryClient.invalidateQueries({ queryKey: ['storefrontProducts', 'category'] });
     },
   });
 }
@@ -168,6 +319,8 @@ export function useDeleteProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.storefrontProducts });
+      // Invalidate all category-specific queries
+      queryClient.invalidateQueries({ queryKey: ['storefrontProducts', 'category'] });
     },
   });
 }
@@ -185,6 +338,8 @@ export function useSetProductPublished() {
       queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.storefrontProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.product(variables.id) });
+      // Invalidate all category-specific queries
+      queryClient.invalidateQueries({ queryKey: ['storefrontProducts', 'category'] });
     },
   });
 }
@@ -198,8 +353,10 @@ export function useUploadProductFile() {
       if (!actor) throw new Error('Actor not available');
       return actor.uploadProductFile(params.id, params.blob);
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
+    onSuccess: async (_, variables) => {
+      // Invalidate and refetch admin products to ensure file status updates immediately
+      await queryClient.invalidateQueries({ queryKey: KEYS.adminProducts });
+      await queryClient.refetchQueries({ queryKey: KEYS.adminProducts });
       queryClient.invalidateQueries({ queryKey: KEYS.product(variables.id) });
     },
   });

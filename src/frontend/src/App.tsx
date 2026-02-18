@@ -6,6 +6,9 @@ import StorefrontPage from './pages/StorefrontPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import BuyerLibraryPage from './pages/BuyerLibraryPage';
+import CategoryStorefrontPage from './pages/CategoryStorefrontPage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -39,7 +42,33 @@ const libraryRoute = createRoute({
   component: BuyerLibraryPage,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, productRoute, adminRoute, libraryRoute]);
+const categoryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/category/$categoryId',
+  component: CategoryStorefrontPage,
+});
+
+const aboutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/about',
+  component: AboutPage,
+});
+
+const contactRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/contact',
+  component: ContactPage,
+});
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  productRoute,
+  adminRoute,
+  libraryRoute,
+  categoryRoute,
+  aboutRoute,
+  contactRoute,
+]);
 
 const router = createRouter({ routeTree });
 

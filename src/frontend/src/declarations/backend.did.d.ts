@@ -10,6 +10,7 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface Category { 'id' : string, 'icon' : string, 'name' : string }
 export type ExternalBlob = Uint8Array;
 export interface Product {
   'id' : string,
@@ -17,6 +18,7 @@ export interface Product {
   'isPublished' : boolean,
   'file' : [] | [ExternalBlob],
   'author' : string,
+  'category' : string,
   'priceInCents' : bigint,
 }
 export type ProductList = Array<Product>;
@@ -53,22 +55,37 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createProduct' : ActorMethod<[string, string, string, bigint], undefined>,
+  'claimStoreOwnership' : ActorMethod<[], undefined>,
+  'createCategory' : ActorMethod<[string, string, string], undefined>,
+  'createProduct' : ActorMethod<
+    [string, string, string, bigint, string],
+    undefined
+  >,
+  'deleteCategory' : ActorMethod<[string], undefined>,
   'deleteProduct' : ActorMethod<[string], undefined>,
   'downloadProductFile' : ActorMethod<[string], ExternalBlob>,
   'getAllUserProfiles' : ActorMethod<[], Array<[Principal, UserProfile]>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCategories' : ActorMethod<[], Array<Category>>,
+  'getCategory' : ActorMethod<[string], Category>,
   'getProduct' : ActorMethod<[string], Product>,
   'getProducts' : ActorMethod<[], Array<Product>>,
   'getPurchasedProductIds' : ActorMethod<[], Array<string>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'isAdminSystemInitialized' : ActorMethod<[], boolean>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'isStoreClaimable' : ActorMethod<[], boolean>,
   'listStorefrontProducts' : ActorMethod<[], ProductList>,
+  'listStorefrontProductsByCategory' : ActorMethod<[string], ProductList>,
   'purchaseProduct' : ActorMethod<[string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], UserProfile>,
+  'setAdminInitialized' : ActorMethod<[], undefined>,
   'setProductPublished' : ActorMethod<[string, boolean], undefined>,
-  'updateProduct' : ActorMethod<[string, string, string, bigint], undefined>,
+  'updateProduct' : ActorMethod<
+    [string, string, string, bigint, string],
+    undefined
+  >,
   'uploadProductFile' : ActorMethod<[string, ExternalBlob], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

@@ -1,14 +1,21 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 21,
+  "projectStateVersion": 37,
   "summary": "App to sell the user's engineering books and notes via a simple storefront with upload/listing, pricing, and purchasing.",
-  "architectural_notes": [],
+  "architectural_notes": [
+    "Admin role assignment decision: automatically grant admin to the first authenticated user who accesses /admin (no token inputs), so subsequent admin checks/product queries succeed for that principal."
+  ],
   "known_issues": [
     "Deployment failed during packaging/push to the network; user requested a retry.",
     "Admin/Product upload button is not available in the UI; needs to be enabled so the owner can upload product files.",
     "Admin/Product upload button still not available in the UI after the attempted deployment/build; fix not taking effect (possible build/deploy mismatch or UI condition/role gating issue).",
     "After a successful build (Draft Version 8), the Admin/Product upload button is still not available; issue persists across builds.",
-    "After production deployment (Version 9), the Admin/Product upload button is still not visible; issue persists."
+    "After production deployment (Version 9), the Admin/Product upload button is still not visible; issue persists.",
+    "After Draft Version 10 deployment, the Admin/Product Upload button is still not visible; issue persists.",
+    "After Draft Version 11 deployment, the Admin/Product Upload button is still not visible; issue persists.",
+    "After Draft Version 12 build, the Admin/Product Upload button is still not visible/available; issue persists.",
+    "UI runtime error: \"Menu item must be used within 'menu'\" (MenuItem used outside of Menu component/context).",
+    "After Draft Version 14 deployment, the menu is visible but the Admin/Product Upload button is still not available/visible; issue persists."
   ],
   "isFixRequest": true,
   "existing_features": [
@@ -211,6 +218,150 @@
         "REQ-31"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-on-the-admin-dashboard-ensure-that-when-the-user-is-authenticated-confirmed-admin-and-the-admin-product-list-query-has-successfully-loaded-each-product-card-renders-a-visible-upload-pdf-button-using-the-existing-upload-control-and-never-silently-omits-the-upload-action-area",
+      "title": "On the Admin Dashboard, ensure that when the user is authenticated, confirmed admin, and the admin product list query has successfully loaded, each product card renders a visible \"Upload PDF\" button (using the existing upload control) and never silently omits the upload action area.",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-the-admin-diagnostics-section-sufficient-to-debug-upload-pdf-not-visible-reports-by-surfacing-the-exact-gating-state-currently-preventing-upload-controls-from-appearing-authentication-admin-check-result-admin-products-query-status-result-and-ensure-this-section-is-visible-on-all-admin-dashboard-states-signed-out-loading-error-not-admin-and-fully-loaded",
+      "title": "Make the Admin Diagnostics section sufficient to debug \"Upload PDF not visible\" reports by surfacing the exact gating state currently preventing upload controls from appearing (authentication, admin check result, admin products query status/result), and ensure this section is visible on all Admin Dashboard states (signed out, loading, error, not admin, and fully loaded).",
+      "reqIds": [
+        "REQ-34"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-admin-dashboard-so-the-per-product-upload-pdf-action-is-available-and-usable-for-the-store-owner-admin-i-e-the-upload-pdf-button-is-visible-clickable-and-triggers-the-upload-flow-on-every-product-card-whenever-the-user-is-authenticated-confirmed-admin-and-the-admin-product-list-has-successfully-loaded",
+      "title": "Fix the Admin Dashboard so the per-product \"Upload PDF\" action is available and usable for the store owner/admin (i.e., the Upload PDF button is visible, clickable, and triggers the upload flow) on every product card whenever the user is authenticated, confirmed admin, and the admin product list has successfully loaded.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-top-level-main-menu-in-the-global-header-that-includes-1-a-categories-entry-for-browsing-book-categories-2-a-clearly-labeled-authentication-entry-sign-in-sign-out-using-the-existing-internet-identity-flow-and-3-links-to-informational-pages-about-us-and-contact-us",
+      "title": "Add a top-level main menu in the global header that includes: (1) a Categories entry for browsing book categories, (2) a clearly labeled authentication entry (Sign in/Sign out) using the existing Internet Identity flow, and (3) links to informational pages: About Us and Contact Us.",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-categories-browsing-end-to-end-so-that-selecting-a-category-in-the-main-menu-navigates-to-a-category-view-and-the-storefront-list-is-filtered-accordingly",
+      "title": "Implement Categories browsing end-to-end so that selecting a category in the main menu navigates to a category view and the storefront list is filtered accordingly.",
+      "reqIds": [
+        "REQ-37"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-informational-pages-for-about-us-and-contact-us-and-route-them-from-the-main-menu-using-english-user-facing-text",
+      "title": "Add informational pages for \"About Us\" and \"Contact Us\" and route them from the main menu, using English user-facing text.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-make-the-global-header-navigation-storefront-categories-about-us-contact-us-my-library-admin-and-sign-in-sign-out-accessible-on-small-screens-mobile-rather-than-being-hidden-behind-sm-md-breakpoints-by-adding-a-mobile-friendly-menu-that-provides-equivalent-navigation-options",
+      "title": "Make the global header navigation (Storefront, Categories, About Us, Contact Us, My Library, Admin, and Sign in/Sign out) accessible on small screens (mobile), rather than being hidden behind sm/md breakpoints, by adding a mobile-friendly menu that provides equivalent navigation options.",
+      "reqIds": [
+        "REQ-40"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-clear-always-visible-troubleshooting-hint-on-the-admin-dashboard-for-cases-where-the-user-expects-uploads-to-be-available-but-they-are-blocked-by-authorization-not-admin-or-data-loading-errors-explicitly-directing-the-user-to-check-the-on-page-admin-diagnostics-and-showing-what-state-is-preventing-uploads",
+      "title": "Add a clear, always-visible troubleshooting hint on the Admin Dashboard for cases where the user expects uploads to be available but they are blocked by authorization (not admin) or data loading errors, explicitly directing the user to check the on-page Admin Diagnostics and showing what state is preventing uploads.",
+      "reqIds": [
+        "REQ-41"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-runtime-error-menu-item-must-be-used-within-menu-by-removing-or-replacing-any-usage-of-dropdownmenu-menu-item-components-that-are-rendered-outside-of-a-dropdownmenu-context-in-the-mobile-navigation-sheet-in-frontend-src-components-brandheader-tsx",
+      "title": "Fix the runtime error \"Menu item must be used within 'menu'\" by removing or replacing any usage of DropdownMenu* menu-item components that are rendered outside of a DropdownMenu context in the mobile navigation (Sheet) in `frontend/src/components/BrandHeader.tsx`.",
+      "reqIds": [
+        "REQ-42"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-admin-dashboard-reliably-displays-a-visible-clickable-upload-pdf-button-for-every-product-card-whenever-the-user-is-authenticated-confirmed-as-admin-and-the-admin-product-list-has-successfully-loaded-the-upload-button-must-not-be-hidden-due-to-unrelated-ui-state-including-any-header-menu-errors",
+      "title": "Ensure the Admin Dashboard reliably displays a visible, clickable \"Upload PDF\" button for every product card whenever the user is authenticated, confirmed as admin, and the admin product list has successfully loaded; the upload button must not be hidden due to unrelated UI state (including any header/menu errors).",
+      "reqIds": [
+        "REQ-43"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-admin-dashboard-ui-so-the-per-product-upload-pdf-action-is-visible-and-enabled-whenever-1-the-user-is-authenticated-2-the-user-is-confirmed-admin-and-3-the-admin-product-list-has-successfully-loaded-if-the-upload-control-cannot-be-shown-for-any-reason-render-an-explicit-inline-error-in-its-place-english-text-on-that-product-card",
+      "title": "Update the Admin Dashboard UI so the per-product \"Upload PDF\" action is visible and enabled whenever: (1) the user is authenticated, (2) the user is confirmed admin, and (3) the admin product list has successfully loaded; if the upload control cannot be shown for any reason, render an explicit inline error in its place (English text) on that product card.",
+      "reqIds": [
+        "REQ-47"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-admin-diagnostics-section-on-the-admin-dashboard-is-sufficient-to-debug-upload-pdf-not-available-reports-by-including-the-backend-admin-gating-diagnostic-data-including-whether-admin-is-initialized-configured-and-ensure-all-user-facing-diagnostics-and-troubleshooting-text-remain-in-english",
+      "title": "Ensure the Admin Diagnostics section on the Admin Dashboard is sufficient to debug \"Upload PDF not available\" reports by including the backend admin-gating diagnostic data (including whether admin is initialized/configured), and ensure all user-facing diagnostics and troubleshooting text remain in English.",
+      "reqIds": [
+        "REQ-48"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-first-time-admin-system-initialization-flow-in-the-admin-dashboard-so-the-store-owner-can-initialize-the-admin-system-from-the-ui-when-the-backend-reports-it-is-not-initialized",
+      "title": "Add a first-time Admin System initialization flow in the Admin Dashboard so the store owner can initialize the admin system from the UI when the backend reports it is not initialized.",
+      "reqIds": [
+        "REQ-49"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-react-query-mutation-hook-for-initializing-the-admin-system-and-wire-it-into-the-admin-dashboard-initialization-ui",
+      "title": "Add a React Query mutation hook for initializing the admin system and wire it into the Admin Dashboard initialization UI.",
+      "reqIds": [
+        "REQ-50"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-admin-dashboard-initialization-ui-admin-to-remove-the-admin-token-and-user-token-input-fields-and-replace-them-with-a-tokenless-initialization-call-to-action-that-initializes-the-admin-system-for-the-currently-signed-in-user",
+      "title": "Update the Admin Dashboard initialization UI (/admin) to remove the Admin Token and User Token input fields and replace them with a tokenless initialization call-to-action that initializes the admin system for the currently signed-in user.",
+      "reqIds": [
+        "REQ-53"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-react-query-admin-initialization-mutation-hook-to-call-the-backend-s-new-tokenless-admin-initialization-method-and-ensure-all-relevant-admin-queries-are-invalidated-refetched-after-initialization-succeeds",
+      "title": "Update the React Query admin initialization mutation hook to call the backend’s new tokenless admin initialization method, and ensure all relevant admin queries are invalidated/refetched after initialization succeeds.",
+      "reqIds": [
+        "REQ-54"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-frontend-claim-store-owner-access-tokenless-call-to-action-on-admin-that-is-shown-when-the-user-is-signed-in-the-admin-system-is-initialized-the-user-is-not-currently-an-admin-and-backend-diagnostics-indicate-the-admin-role-is-claimable-e-g-no-admins-exist",
+      "title": "Add a frontend \"Claim Store Owner Access\" (tokenless) call-to-action on /admin that is shown when the user is signed in, the admin system is initialized, the user is not currently an admin, and backend diagnostics indicate the admin role is claimable (e.g., no admins exist).",
+      "reqIds": [
+        "REQ-58"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-react-query-layer-to-support-the-new-tokenless-claim-owner-admin-flow-and-ensure-all-relevant-queries-are-invalidated-refetched-after-success-admin-check-admin-products-and-any-admin-diagnostics-initialization-queries-used-by-admin",
+      "title": "Update the React Query layer to support the new tokenless claim-owner/admin flow and ensure all relevant queries are invalidated/refetched after success (admin check, admin products, and any admin diagnostics / initialization queries used by /admin).",
+      "reqIds": [
+        "REQ-59"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -271,6 +422,104 @@
       "summary": "Ensure the backend admin determination is correctly configured so the store owner can be recognized as admin in production (so the Admin Dashboard and upload functionality can be used). If the canister controller/installer is intended to be admin by default, ensure `isCallerAdmin()` returns true for that principal and admin-restricted methods (create/update/delete/publish/upload/getProducts) succeed for that principal.",
       "reqIds": [
         "REQ-30"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Ensure the backend reliably recognizes the store owner as an admin in production so that admin-gated methods (including product listing and file upload) succeed for the owner principal.",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Create a main menu/navigation with book categories, user login entry, and informational pages (About Us, Contact Us).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Ensure the store owner is reliably recognized as an admin in production so that admin-gated backend methods succeed (including isCallerAdmin(), getProducts(), create/update/delete/publish, and uploadProductFile()).",
+      "reqIds": [
+        "REQ-39"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-16",
+      "summary": "Verify and, if needed, fix backend admin recognition so the store owner is detected as admin in production and admin-gated methods required by the Admin Dashboard (at minimum `isCallerAdmin()`, `getProducts()`, and `uploadProductFile()`) succeed for the owner principal.",
+      "reqIds": [
+        "REQ-44"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Fix backend admin recognition so the store owner is reliably detected as an admin in production and after upgrades, and so admin-gated methods used by the Admin Dashboard (at minimum: isCallerAdmin(), getProducts(), uploadProductFile()) succeed for the owner principal.",
+      "reqIds": [
+        "REQ-45"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Add explicit backend-readable diagnostics for admin gating so the frontend can distinguish between (a) signed out, (b) signed in but not admin, and (c) admin system not initialized / lost state after upgrade (if applicable), using English user-facing text for any surfaced errors.",
+      "reqIds": [
+        "REQ-46"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Persist the backend admin initialization status across upgrades so the canister does not revert to \"Admin system not initialized\" after deployment/upgrade.",
+      "reqIds": [
+        "REQ-51"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Remove the Admin Token/User Token requirement for initializing the admin system; instead automatically recognize/set the store owner (e.g., canister controller/installer principal) as admin so /admin works without manual token setup.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-23",
+      "summary": "Update the backend admin initialization flow so the Admin Dashboard no longer requires an Admin Token and User Token to initialize the admin system; initialization must be possible without any user-provided secret tokens and must establish the signed-in initializer (the caller principal) as the initial admin.",
+      "reqIds": [
+        "REQ-52"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Update backend admin initialization/assignment so the first authenticated user who opens /admin (or performs initialization) is automatically granted admin rights (no tokens), ensuring Admin Check returns admin and admin product queries work.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Update the backend admin system so that if the admin system is initialized but there are no admins configured (or the admin list is otherwise empty), the first authenticated caller can become the store owner/admin without providing any tokens.",
+      "reqIds": [
+        "REQ-55"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "Persist admin-system state across upgrades so the app does not lose (a) whether the admin system is initialized and (b) the configured admin principal(s), while preserving existing categories/products/purchases/user profiles data.",
+      "reqIds": [
+        "REQ-56"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-27",
+      "summary": "Expose backend-readable admin-gating diagnostics sufficient for the frontend Admin Diagnostics panel to distinguish: (a) signed out, (b) signed in but not admin, (c) admin system not initialized, and (d) initialized but no admin configured / claimable state; ensure any surfaced error strings remain in English.",
+      "reqIds": [
+        "REQ-57"
       ],
       "status": "pending"
     }

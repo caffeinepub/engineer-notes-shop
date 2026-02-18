@@ -1,68 +1,42 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Admin Dashboard: Ensure Upload PDF control visibility, diagnostics, and test selectors",
+  "title": "Engineer Notes — Claim Store Owner CTA + React Query support",
   "requirements": [
     {
-      "id": "REQ-28",
-      "summary": "Guarantee each admin product card renders the Upload PDF control (or an explicit inline error message in the same location) and keep it visible across breakpoints; only disable during that product’s active upload.",
+      "id": "REQ-58",
+      "summary": "Show a tokenless \"Claim Store Owner Access\" call-to-action on /admin when signed in, admin system is initialized, user is not admin, and backend indicates the store is claimable.",
       "acceptanceCriteria": [
-        "When viewing /admin as an admin and the product grid is rendered, every product card shows a visible \"Upload PDF\" button (or a visible inline error message in the same location if it truly cannot render).",
-        "The Upload PDF control is not hidden by responsive CSS (e.g., not gated behind `hidden` breakpoints) and remains visible on mobile and desktop layouts.",
-        "The Upload PDF button is only disabled during an active upload for that specific product; otherwise it is enabled and clickable."
+        "When the user is signed in, admin system is initialized, user is not admin, and the backend indicates the role is claimable, /admin renders a prominent button labeled \"Claim Store Owner Access\".",
+        "Clicking the button triggers the tokenless claim action and then refetches/invalidates relevant admin queries so the page transitions to the fully functional Admin Dashboard without a hard refresh.",
+        "If the backend indicates the role is not claimable, the claim button is not shown and the existing Access Denied behavior remains."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Refactor the per-product action area to render a dedicated upload action slot that always shows either the ProductFileUploadButton or a user-visible inline error message in the same location; ensure the slot/container uses non-hidden layout classes across breakpoints and that disabled state is driven only by the product-specific uploadStates entry."
-        },
-        {
-          "path": "frontend/src/components/admin/ProductFileUploadButton.tsx",
-          "operation": "modify",
-          "description": "Harden rendering for the Upload PDF control: add a stable wrapper/container element for layout consistency, ensure the visible Button is never gated behind responsive `hidden` classes, and support a clear failure mode contract (e.g., allow the parent to render an inline error while keeping this component focused on the button/input behavior). Do not edit shadcn components; compose them instead."
+          "description": "Add claimable-state handling for the non-admin branch: use store-claimable diagnostics and render a prominent \"Claim Store Owner Access\" button when eligible; on success, rely on React Query invalidations/refetch to transition to the functional Admin Dashboard without refresh; on failure, show a clear English error and keep the page usable. Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-29",
-      "summary": "Add an always-visible Admin Diagnostics section at the top of the Admin Dashboard showing auth/principal/admin check/products query status, counts, and captured error messages.",
+      "id": "REQ-59",
+      "summary": "Extend the React Query layer with a claim-owner mutation and store-claimable diagnostics query, and invalidate/refetch relevant admin queries after success.",
       "acceptanceCriteria": [
-        "When not signed in, the page clearly states sign-in is required (existing behavior is OK) and also shows that admin diagnostics are unavailable without authentication.",
-        "When signed in but not admin, the UI clearly states \"Not authorized as store owner\" and the diagnostics show the admin check result as false.",
-        "When admin check or admin products query fails, diagnostics show the captured error message string in English.",
-        "When admin products load successfully, diagnostics show a non-zero or zero product count accurately."
+        "A new React Query mutation hook exists for the tokenless claim-owner/admin action and is used by /admin.",
+        "On successful claim, React Query invalidates/refetches at least: admin check, admin products list, and admin diagnostics/initialization queries used on the page.",
+        "On failure, the UI shows a clear English error message and does not leave the page in a broken loading state."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/AdminDashboardPage.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Restructure AdminDashboardPage to always render a top-of-page \"Admin Diagnostics\" section (even when unauthenticated or unauthorized) that includes: authentication status, caller principal text (when available), admin check status/result, admin products query status and result count, and any error message strings from those queries; keep existing sign-in required and AccessDeniedScreen behavior while ensuring diagnostics remain visible above/alongside those states."
+          "description": "Add React Query support for the tokenless claim-owner flow: (1) a query hook for backend isStoreClaimable() (with a stable query key), and (2) a mutation hook for claimStoreOwnership() that on success invalidates/refetches admin check, admin products list, admin system initialized status, and the store-claimable query used by /admin. Ensure errors propagate as English messages to the caller for UI display. Verify the component's usage instructions before implementing."
         },
-        {
-          "path": "frontend/src/components/admin/AdminDiagnostics.tsx",
-          "operation": "create",
-          "description": "Create a small AdminDiagnostics component (composed from existing shadcn/ui primitives) to present the required diagnostic fields consistently; pass in query/loading/error/result props from AdminDashboardPage and render human-readable English status strings. Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-31",
-      "summary": "Add deterministic data-testid selectors for the per-product Upload PDF action area, upload button, and inline error replacement.",
-      "acceptanceCriteria": [
-        "Each product card renders a unique, deterministic test id for its upload action (e.g., includes the product id).",
-        "If the upload control is replaced by an inline error message (REQ-28), that message also has a deterministic test id for the same product id."
-      ],
-      "file_operations": [
         {
           "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Add deterministic test selectors for each product’s upload action area container (e.g., data-testid including product.id), and ensure the inline error replacement (when Upload PDF cannot render) also includes a deterministic data-testid keyed by the same product id."
-        },
-        {
-          "path": "frontend/src/components/admin/ProductFileUploadButton.tsx",
-          "operation": "modify",
-          "description": "Add support for deterministic test selectors on the Upload PDF control (e.g., accept productId or explicit testId props) and apply data-testid to the rendered visible Button so tests can reliably find the per-product upload control."
+          "description": "Wire the new React Query hooks into /admin: call the store-claimable query only when signed in and admin system is initialized; use the claim-owner mutation for the CTA; display English error feedback on mutation failure without breaking loading states. Verify the component's usage instructions before implementing."
         }
       ]
     }

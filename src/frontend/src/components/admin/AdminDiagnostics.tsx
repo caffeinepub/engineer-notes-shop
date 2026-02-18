@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Loader2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, AlertCircle, HelpCircle } from 'lucide-react';
 
 interface AdminDiagnosticsProps {
   isAuthenticated: boolean;
@@ -13,6 +13,10 @@ interface AdminDiagnosticsProps {
   productsError: boolean;
   productsErrorMessage?: string;
   productsCount?: number;
+  adminSystemInitLoading?: boolean;
+  adminSystemInitError?: boolean;
+  adminSystemInitErrorMessage?: string;
+  isAdminSystemInitialized?: boolean;
 }
 
 export default function AdminDiagnostics({
@@ -26,120 +30,133 @@ export default function AdminDiagnostics({
   productsError,
   productsErrorMessage,
   productsCount,
+  adminSystemInitLoading,
+  adminSystemInitError,
+  adminSystemInitErrorMessage,
+  isAdminSystemInitialized,
 }: AdminDiagnosticsProps) {
+  const getAuthStatus = () => {
+    if (!isAuthenticated) {
+      return { icon: <XCircle className="h-4 w-4" />, text: 'Not signed in', variant: 'destructive' as const };
+    }
+    return { icon: <CheckCircle2 className="h-4 w-4" />, text: 'Signed in', variant: 'default' as const };
+  };
+
+  const getAdminSystemStatus = () => {
+    if (adminSystemInitLoading) {
+      return { icon: <Loader2 className="h-4 w-4 animate-spin" />, text: 'Checking...', variant: 'secondary' as const };
+    }
+    if (adminSystemInitError) {
+      return { icon: <XCircle className="h-4 w-4" />, text: `Error: ${adminSystemInitErrorMessage}`, variant: 'destructive' as const };
+    }
+    if (isAdminSystemInitialized === true) {
+      return { icon: <CheckCircle2 className="h-4 w-4" />, text: 'Initialized', variant: 'default' as const };
+    }
+    if (isAdminSystemInitialized === false) {
+      return { icon: <XCircle className="h-4 w-4" />, text: 'Not initialized', variant: 'destructive' as const };
+    }
+    return { icon: <HelpCircle className="h-4 w-4" />, text: 'Unknown', variant: 'secondary' as const };
+  };
+
+  const getAdminStatus = () => {
+    if (!isAuthenticated) {
+      return { icon: <HelpCircle className="h-4 w-4" />, text: 'N/A (not signed in)', variant: 'secondary' as const };
+    }
+    if (adminCheckLoading) {
+      return { icon: <Loader2 className="h-4 w-4 animate-spin" />, text: 'Checking...', variant: 'secondary' as const };
+    }
+    if (adminCheckError) {
+      return { icon: <XCircle className="h-4 w-4" />, text: `Error: ${adminCheckErrorMessage}`, variant: 'destructive' as const };
+    }
+    if (isAdmin === true) {
+      return { icon: <CheckCircle2 className="h-4 w-4" />, text: 'Admin', variant: 'default' as const };
+    }
+    if (isAdmin === false) {
+      return { icon: <XCircle className="h-4 w-4" />, text: 'Not admin', variant: 'destructive' as const };
+    }
+    return { icon: <HelpCircle className="h-4 w-4" />, text: 'Unknown', variant: 'secondary' as const };
+  };
+
+  const getProductsStatus = () => {
+    if (!isAuthenticated) {
+      return { icon: <HelpCircle className="h-4 w-4" />, text: 'N/A (not signed in)', variant: 'secondary' as const };
+    }
+    if (isAdmin === false) {
+      return { icon: <HelpCircle className="h-4 w-4" />, text: 'N/A (not admin)', variant: 'secondary' as const };
+    }
+    if (adminCheckLoading || isAdmin === undefined) {
+      return { icon: <HelpCircle className="h-4 w-4" />, text: 'Waiting for admin check', variant: 'secondary' as const };
+    }
+    if (productsLoading) {
+      return { icon: <Loader2 className="h-4 w-4 animate-spin" />, text: 'Loading...', variant: 'secondary' as const };
+    }
+    if (productsError) {
+      return { icon: <XCircle className="h-4 w-4" />, text: `Error: ${productsErrorMessage}`, variant: 'destructive' as const };
+    }
+    if (productsCount !== undefined) {
+      return { icon: <CheckCircle2 className="h-4 w-4" />, text: `Loaded (${productsCount} products)`, variant: 'default' as const };
+    }
+    return { icon: <HelpCircle className="h-4 w-4" />, text: 'Unknown', variant: 'secondary' as const };
+  };
+
+  const authStatus = getAuthStatus();
+  const adminSystemStatus = getAdminSystemStatus();
+  const adminStatus = getAdminStatus();
+  const productsStatus = getProductsStatus();
+
   return (
     <Card className="mb-6 border-dashed">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium flex items-center gap-2">
           <AlertCircle className="h-4 w-4" />
           Admin Diagnostics
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 text-sm">
-        {/* Authentication Status */}
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Authentication:</span>
-          <div className="flex items-center gap-2">
-            {isAuthenticated ? (
-              <>
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <Badge variant="outline" className="text-green-600">Signed In</Badge>
-              </>
-            ) : (
-              <>
-                <XCircle className="h-4 w-4 text-muted-foreground" />
-                <Badge variant="outline">Not Signed In</Badge>
-              </>
-            )}
-          </div>
+          <Badge variant={authStatus.variant} className="flex items-center gap-1">
+            {authStatus.icon}
+            {authStatus.text}
+          </Badge>
         </div>
-
-        {/* Principal */}
+        
         {isAuthenticated && principalText && (
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-2">
             <span className="text-muted-foreground">Principal:</span>
             <code className="text-xs bg-muted px-2 py-1 rounded break-all max-w-[60%] text-right">
               {principalText}
             </code>
           </div>
         )}
-
-        {/* Admin Check Status */}
+        
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Admin System:</span>
+          <Badge variant={adminSystemStatus.variant} className="flex items-center gap-1">
+            {adminSystemStatus.icon}
+            {adminSystemStatus.text}
+          </Badge>
+        </div>
+        
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Admin Check:</span>
-          <div className="flex items-center gap-2">
-            {!isAuthenticated ? (
-              <>
-                <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                <Badge variant="outline">Unavailable (not authenticated)</Badge>
-              </>
-            ) : adminCheckLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <Badge variant="outline">Loading...</Badge>
-              </>
-            ) : adminCheckError ? (
-              <>
-                <XCircle className="h-4 w-4 text-destructive" />
-                <Badge variant="destructive">Error</Badge>
-              </>
-            ) : isAdmin === true ? (
-              <>
-                <CheckCircle2 className="h-4 w-4 text-green-600" />
-                <Badge variant="outline" className="text-green-600">Admin</Badge>
-              </>
-            ) : isAdmin === false ? (
-              <>
-                <XCircle className="h-4 w-4 text-orange-600" />
-                <Badge variant="outline" className="text-orange-600">Not Admin</Badge>
-              </>
-            ) : (
-              <>
-                <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                <Badge variant="outline">Unknown</Badge>
-              </>
-            )}
-          </div>
+          <Badge variant={adminStatus.variant} className="flex items-center gap-1">
+            {adminStatus.icon}
+            {adminStatus.text}
+          </Badge>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">Products Query:</span>
+          <Badge variant={productsStatus.variant} className="flex items-center gap-1">
+            {productsStatus.icon}
+            {productsStatus.text}
+          </Badge>
         </div>
 
-        {/* Admin Check Error Message */}
-        {adminCheckError && adminCheckErrorMessage && (
-          <div className="text-xs text-destructive bg-destructive/10 p-2 rounded">
-            <strong>Admin Check Error:</strong> {adminCheckErrorMessage}
-          </div>
-        )}
-
-        {/* Products Query Status */}
-        {isAuthenticated && isAdmin === true && (
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Products Query:</span>
-            <div className="flex items-center gap-2">
-              {productsLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <Badge variant="outline">Loading...</Badge>
-                </>
-              ) : productsError ? (
-                <>
-                  <XCircle className="h-4 w-4 text-destructive" />
-                  <Badge variant="destructive">Error</Badge>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <Badge variant="outline" className="text-green-600">
-                    {productsCount ?? 0} product{productsCount !== 1 ? 's' : ''}
-                  </Badge>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Products Query Error Message */}
-        {productsError && productsErrorMessage && (
-          <div className="text-xs text-destructive bg-destructive/10 p-2 rounded">
-            <strong>Products Query Error:</strong> {productsErrorMessage}
+        {isAuthenticated && isAdmin === true && productsCount !== undefined && productsCount > 0 && (
+          <div className="pt-2 border-t text-xs text-muted-foreground">
+            ✓ Upload PDF buttons should be visible on all {productsCount} product card(s)
           </div>
         )}
       </CardContent>

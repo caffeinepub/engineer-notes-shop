@@ -1,71 +1,74 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-18T02:24:21.032Z",
+  "generatedAt": "2026-02-18T07:07:54.374Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 3,
+    "total": 5,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-28",
-        "summary": "Make it impossible for the Admin Dashboard to reach a state where the user is an admin with a successfully loaded admin product list but the per-product \"Upload PDF\" control is not visible. If the Upload PDF control cannot be rendered for any reason, render an explicit, user-visible inline error in its place on that product card explaining why.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/components/admin/ProductFileUploadButton.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/components/admin/ProductFileUploadButton.tsx"
-        ]
-      },
-      {
-        "id": "REQ-29",
-        "summary": "Add an always-visible \"Admin Diagnostics\" section at the top of the Admin Dashboard that helps explain why the Upload PDF button might not be visible, including: authentication status, caller principal (as text), admin check status/result, admin products query status/result count, and any error messages from those queries.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/components/admin/AdminDiagnostics.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/components/admin/AdminDiagnostics.tsx"
-        ]
-      },
-      {
-        "id": "REQ-30",
-        "summary": "Ensure the backend admin determination is correctly configured so the store owner can be recognized as admin in production (so the Admin Dashboard and upload functionality can be used). If the canister controller/installer is intended to be admin by default, ensure `isCallerAdmin()` returns true for that principal and admin-restricted methods (create/update/delete/publish/upload/getProducts) succeed for that principal.",
+        "id": "REQ-55",
+        "summary": "Update the backend admin system so that if the admin system is initialized but there are no admins configured (or the admin list is otherwise empty), the first authenticated caller can become the store owner/admin without providing any tokens.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-31",
-        "summary": "Add stable test selectors to the Upload PDF control and its container so it can be reliably verified in future builds (e.g., data-testid on the per-product upload button and on the per-product action area).",
+        "id": "REQ-56",
+        "summary": "Persist admin-system state across upgrades so the app does not lose (a) whether the admin system is initialized and (b) the configured admin principal(s), while preserving existing categories/products/purchases/user profiles data.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-57",
+        "summary": "Expose backend-readable admin-gating diagnostics sufficient for the frontend Admin Diagnostics panel to distinguish: (a) signed out, (b) signed in but not admin, (c) admin system not initialized, and (d) initialized but no admin configured / claimable state; ensure any surfaced error strings remain in English.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-58",
+        "summary": "Add a frontend \"Claim Store Owner Access\" (tokenless) call-to-action on /admin that is shown when the user is signed in, the admin system is initialized, the user is not currently an admin, and backend diagnostics indicate the admin role is claimable (e.g., no admins exist).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/components/admin/ProductFileUploadButton.tsx"
+          "frontend/src/pages/AdminDashboardPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/AdminDashboardPage.tsx",
-          "frontend/src/components/admin/ProductFileUploadButton.tsx"
+          "frontend/src/pages/AdminDashboardPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-59",
+        "summary": "Update the React Query layer to support the new tokenless claim-owner/admin flow and ensure all relevant queries are invalidated/refetched after success (admin check, admin products, and any admin diagnostics / initialization queries used by /admin).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/AdminDashboardPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/AdminDashboardPage.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
     "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/admin/AdminDiagnostics.tsx",
-    "frontend/src/components/admin/ProductFileUploadButton.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useQueries.ts",
     "frontend/src/pages/AdminDashboardPage.tsx",
     "project_state.json",
     "scratch/component-selection.json",

@@ -1,91 +1,115 @@
 {
   "kind": "build_request",
-  "title": "Fix missing Upload PDF button visibility on Admin Dashboard",
-  "projectName": "Engineer Notes Shop",
-  "priority": "high",
+  "title": "Auto-assign first signed-in admin and add claim-owner flow when admin list is empty",
+  "projectName": "Engineer Notes",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-28",
-      "text": "Make it impossible for the Admin Dashboard to reach a state where the user is an admin with a successfully loaded admin product list but the per-product \"Upload PDF\" control is not visible. If the Upload PDF control cannot be rendered for any reason, render an explicit, user-visible inline error in its place on that product card explaining why.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-6"
-        ],
-        "quotes": [
-          "Still Product upload button is not visible"
-        ]
-      },
-      "acceptanceCriteria": [
-        "When viewing /admin as an admin and the product grid is rendered, every product card shows a visible \"Upload PDF\" button (or a visible inline error message in the same location if it truly cannot render).",
-        "The Upload PDF control is not hidden by responsive CSS (e.g., not gated behind `hidden` breakpoints) and remains visible on mobile and desktop layouts.",
-        "The Upload PDF button is only disabled during an active upload for that specific product; otherwise it is enabled and clickable."
-      ]
-    },
-    {
-      "id": "REQ-29",
-      "text": "Add an always-visible \"Admin Diagnostics\" section at the top of the Admin Dashboard that helps explain why the Upload PDF button might not be visible, including: authentication status, caller principal (as text), admin check status/result, admin products query status/result count, and any error messages from those queries.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-6"
-        ],
-        "quotes": [
-          "Still Product upload button is not visible"
-        ]
-      },
-      "acceptanceCriteria": [
-        "When not signed in, the page clearly states sign-in is required (existing behavior is OK) and also shows that admin diagnostics are unavailable without authentication.",
-        "When signed in but not admin, the UI clearly states \"Not authorized as store owner\" and the diagnostics show the admin check result as false.",
-        "When admin check or admin products query fails, diagnostics show the captured error message string in English.",
-        "When admin products load successfully, diagnostics show a non-zero or zero product count accurately."
-      ]
-    },
-    {
-      "id": "REQ-30",
-      "text": "Ensure the backend admin determination is correctly configured so the store owner can be recognized as admin in production (so the Admin Dashboard and upload functionality can be used). If the canister controller/installer is intended to be admin by default, ensure `isCallerAdmin()` returns true for that principal and admin-restricted methods (create/update/delete/publish/upload/getProducts) succeed for that principal.",
+      "id": "REQ-55",
+      "text": "Update the backend admin system so that if the admin system is initialized but there are no admins configured (or the admin list is otherwise empty), the first authenticated caller can become the store owner/admin without providing any tokens.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-3",
+          "msg-4"
         ],
         "quotes": [
-          "Still Product upload button is not visible"
+          "Screenshots are attached to show screen message after signin",
+          "Yes, this is correct account"
         ]
       },
       "acceptanceCriteria": [
-        "When the store owner signs in with Internet Identity and navigates to /admin, the admin check succeeds (returns true) and the admin product list loads without trapping.",
-        "As the store owner, uploading a PDF via `uploadProductFile` succeeds (no authorization trap).",
-        "As a non-admin user, admin-only calls still correctly trap with an authorization error (no regression in access control)."
+        "Given the admin system is initialized and there are currently zero admins configured, an authenticated caller can perform a tokenless action that grants the caller admin permissions.",
+        "After the first caller becomes admin, subsequent callers cannot automatically become admin via the same path if an admin already exists.",
+        "All admin-gated backend methods used by the Admin Dashboard (at minimum: admin check, admin products list, and uploadProductFile) succeed for the newly assigned admin principal."
       ]
     },
     {
-      "id": "REQ-31",
-      "text": "Add stable test selectors to the Upload PDF control and its container so it can be reliably verified in future builds (e.g., data-testid on the per-product upload button and on the per-product action area).",
-      "target": "frontend",
+      "id": "REQ-56",
+      "text": "Persist admin-system state across upgrades so the app does not lose (a) whether the admin system is initialized and (b) the configured admin principal(s), while preserving existing categories/products/purchases/user profiles data.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-3"
         ],
         "quotes": [
-          "Still Product upload button is not visible"
+          "Screenshots are attached to show screen message after signin"
         ]
       },
       "acceptanceCriteria": [
-        "Each product card renders a unique, deterministic test id for its upload action (e.g., includes the product id).",
-        "If the upload control is replaced by an inline error message (REQ-28), that message also has a deterministic test id for the same product id."
+        "After an upgrade, the canister still reports the same admin-system initialized status as before the upgrade.",
+        "After an upgrade, the canister still recognizes the previously assigned store owner/admin principal(s) as admin.",
+        "Existing stored app data (products, categories, files, purchases, profiles) remains accessible and unchanged after upgrade."
+      ]
+    },
+    {
+      "id": "REQ-57",
+      "text": "Expose backend-readable admin-gating diagnostics sufficient for the frontend Admin Diagnostics panel to distinguish: (a) signed out, (b) signed in but not admin, (c) admin system not initialized, and (d) initialized but no admin configured / claimable state; ensure any surfaced error strings remain in English.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-3"
+        ],
+        "quotes": [
+          "Screenshots are attached to show screen message after signin"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The backend provides a diagnostics response (or equivalent queryable fields) that allows the frontend to determine whether the system is initialized, whether any admins exist, and whether the current caller can claim the initial admin role.",
+        "All backend trap/error messages that are displayed to users are in English."
+      ]
+    },
+    {
+      "id": "REQ-58",
+      "text": "Add a frontend \"Claim Store Owner Access\" (tokenless) call-to-action on /admin that is shown when the user is signed in, the admin system is initialized, the user is not currently an admin, and backend diagnostics indicate the admin role is claimable (e.g., no admins exist).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3",
+          "msg-4"
+        ],
+        "quotes": [
+          "Screenshots are attached to show screen message after signin",
+          "Yes, this is correct account"
+        ]
+      },
+      "acceptanceCriteria": [
+        "When the user is in the state shown in the provided screenshots (Signed in + Initialized + Not admin), and the backend indicates the admin role is claimable, /admin renders a prominent button labeled \"Claim Store Owner Access\" (English text).",
+        "Clicking the button calls the new tokenless backend method, then automatically refetches/invalidates relevant admin queries so the page transitions to the fully functional Admin Dashboard without requiring a hard refresh.",
+        "If the backend indicates the admin role is not claimable (an admin already exists), the claim button is not shown and the user continues to see the existing Access Denied behavior."
+      ]
+    },
+    {
+      "id": "REQ-59",
+      "text": "Update the React Query layer to support the new tokenless claim-owner/admin flow and ensure all relevant queries are invalidated/refetched after success (admin check, admin products, and any admin diagnostics / initialization queries used by /admin).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3",
+          "msg-4"
+        ],
+        "quotes": [
+          "Screenshots are attached to show screen message after signin",
+          "Yes, this is correct account"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A new React Query mutation hook exists for the tokenless claim-owner/admin action and is used by /admin.",
+        "On successful claim, React Query invalidates/refetches at least: admin check, admin products list, and admin diagnostics/initialization queries used on the page.",
+        "On failure, the UI shows a clear English error message and does not leave the page in a broken loading state."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under frontend/src/components/ui (Shadcn components); compose them instead.",
-    "Do not modify immutable frontend paths listed in SYSTEM_CONTEXT.",
-    "Backend must remain a single Motoko actor with all logic in backend/main.mo; only introduce backend/migration.mo if a state migration is truly required."
+    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
+    "Generate backend/migration.mo only if required to preserve state across upgrades (conditional migration policy).",
+    "Do not edit files under frontend/src/components/ui, frontend/src/main.tsx, frontend/src/hooks/useInternetIdentity.ts(x), or frontend/src/hooks/useActor.ts (immutable paths).",
+    "Use English for any user-facing UI text and surfaced error messages."
   ],
   "nonGoals": [
-    "Adding new product fields or changing the product schema beyond what is required to fix admin detection and upload-button visibility.",
-    "Introducing any new authentication provider beyond Internet Identity.",
-    "Adding real-time progress via websockets or external services."
+    "Adding third-party authentication providers (only Internet Identity is supported).",
+    "Implementing payments or external databases.",
+    "Changing unrelated storefront/buyer-library UI behavior beyond what is needed to fix admin recognition and access to /admin."
   ],
   "imageRequirements": {
     "required": [],

@@ -2,10 +2,9 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-make-it-impossible-for-the-admin-dashboard-to-reach-a-state-where-the-user-is-an-admin-with-a-successfully-loaded-admin-product-list-but-the-per-product-upload-pdf-control-is-not-visible-if-the-upload-pdf-control-cannot-be-rendered-for-any-reason-render-an-explicit-user-visible-inline-error-in-its-place-on-that-product-card-explaining-why",
-      "featureTitle": "Make it impossible for the Admin Dashboard to reach a state where the user is an admin with a successfully loaded admin product list but the per-product \"Upload PDF\" control is not visible. If the Upload PDF control cannot be rendered for any reason, render an explicit, user-visible inline error in its place on that product card explaining why.",
+      "featureId": "feature-add-a-frontend-claim-store-owner-access-tokenless-call-to-action-on-admin-that-is-shown-when-the-user-is-signed-in-the-admin-system-is-initialized-the-user-is-not-currently-an-admin-and-backend-diagnostics-indicate-the-admin-role-is-claimable-e-g-no-admins-exist",
+      "featureTitle": "Add a frontend \"Claim Store Owner Access\" (tokenless) call-to-action on /admin that is shown when the user is signed in, the admin system is initialized, the user is not currently an admin, and backend diagnostics indicate the admin role is claimable (e.g., no admins exist).",
       "files": [
-        "frontend/src/components/admin/ProductFileUploadButton.tsx",
         "frontend/src/pages/AdminDashboardPage.tsx"
       ],
       "components": [
@@ -18,15 +17,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-28"
+        "REQ-58"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-an-always-visible-admin-diagnostics-section-at-the-top-of-the-admin-dashboard-that-helps-explain-why-the-upload-pdf-button-might-not-be-visible-including-authentication-status-caller-principal-as-text-admin-check-status-result-admin-products-query-status-result-count-and-any-error-messages-from-those-queries",
-      "featureTitle": "Add an always-visible \"Admin Diagnostics\" section at the top of the Admin Dashboard that helps explain why the Upload PDF button might not be visible, including: authentication status, caller principal (as text), admin check status/result, admin products query status/result count, and any error messages from those queries.",
+      "featureId": "feature-update-the-react-query-layer-to-support-the-new-tokenless-claim-owner-admin-flow-and-ensure-all-relevant-queries-are-invalidated-refetched-after-success-admin-check-admin-products-and-any-admin-diagnostics-initialization-queries-used-by-admin",
+      "featureTitle": "Update the React Query layer to support the new tokenless claim-owner/admin flow and ensure all relevant queries are invalidated/refetched after success (admin check, admin products, and any admin diagnostics / initialization queries used by /admin).",
       "files": [
-        "frontend/src/components/admin/AdminDiagnostics.tsx",
+        "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/AdminDashboardPage.tsx"
       ],
       "components": [
@@ -39,28 +38,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-29"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-stable-test-selectors-to-the-upload-pdf-control-and-its-container-so-it-can-be-reliably-verified-in-future-builds-e-g-data-testid-on-the-per-product-upload-button-and-on-the-per-product-action-area",
-      "featureTitle": "Add stable test selectors to the Upload PDF control and its container so it can be reliably verified in future builds (e.g., data-testid on the per-product upload button and on the per-product action area).",
-      "files": [
-        "frontend/src/components/admin/ProductFileUploadButton.tsx",
-        "frontend/src/pages/AdminDashboardPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-31"
+        "REQ-59"
       ],
       "confidence": "high"
     }

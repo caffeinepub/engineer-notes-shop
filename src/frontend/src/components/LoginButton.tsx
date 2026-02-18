@@ -3,7 +3,12 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { LogIn, LogOut, Loader2 } from 'lucide-react';
 
-export default function LoginButton() {
+interface LoginButtonProps {
+  variant?: 'default' | 'mobile';
+  onAuthComplete?: () => void;
+}
+
+export default function LoginButton({ variant = 'default', onAuthComplete }: LoginButtonProps = {}) {
   const { login, clear, loginStatus, identity } = useInternetIdentity();
   const queryClient = useQueryClient();
 
@@ -14,9 +19,11 @@ export default function LoginButton() {
     if (isAuthenticated) {
       await clear();
       queryClient.clear();
+      onAuthComplete?.();
     } else {
       try {
         await login();
+        onAuthComplete?.();
       } catch (error: any) {
         console.error('Login error:', error);
         if (error.message === 'User is already authenticated') {
@@ -26,6 +33,35 @@ export default function LoginButton() {
       }
     }
   };
+
+  if (variant === 'mobile') {
+    return (
+      <Button
+        onClick={handleAuth}
+        disabled={isLoggingIn}
+        variant={isAuthenticated ? 'outline' : 'default'}
+        size="sm"
+        className="w-full"
+      >
+        {isLoggingIn ? (
+          <>
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            Signing in...
+          </>
+        ) : isAuthenticated ? (
+          <>
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign out
+          </>
+        ) : (
+          <>
+            <LogIn className="h-4 w-4 mr-2" />
+            Sign in
+          </>
+        )}
+      </Button>
+    );
+  }
 
   return (
     <Button
@@ -37,17 +73,17 @@ export default function LoginButton() {
       {isLoggingIn ? (
         <>
           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          Logging in...
+          Signing in...
         </>
       ) : isAuthenticated ? (
         <>
           <LogOut className="h-4 w-4 mr-2" />
-          Logout
+          Sign out
         </>
       ) : (
         <>
           <LogIn className="h-4 w-4 mr-2" />
-          Login
+          Sign in
         </>
       )}
     </Button>
