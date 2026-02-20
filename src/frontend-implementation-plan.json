@@ -1,41 +1,57 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix Admin Authentication - Backend Owner Recognition Issue",
+  "title": "Fix admin authentication to allow access to admin dashboard",
   "requirements": [
     {
-      "id": "REQ-3",
-      "summary": "Remove the 'Initialize as Owner' button from AccessDeniedScreen since auto-initialization should handle owner assignment automatically",
+      "id": "REQ-1",
+      "summary": "Fix admin authentication so that users who see the Admin menu option can successfully access the admin dashboard",
       "acceptanceCriteria": [
-        "If auto-initialization works correctly, remove the 'Initialize as Owner' button from the AccessDeniedScreen",
-        "If the button is kept, ensure it properly triggers the backend initialization and updates the UI state immediately",
-        "The user experience is clear and doesn't show conflicting states (Initialized ✓ but Not admin ✗)"
+        "User with admin privileges can click the Admin menu option and successfully access the admin dashboard",
+        "Admin dashboard displays product management interface with CRUD operations",
+        "No authentication errors or access denied messages when admin user navigates to admin pages"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/AccessDeniedScreen.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Remove the 'Initialize as Owner' button and its associated customAction prop since the authorization component handles automatic owner assignment on first authenticated access. Update the default message to clearly state that admin access is automatically granted to the first authenticated user without requiring manual initialization. This eliminates the confusing UI state where initialization appears successful but admin check fails."
+          "description": "Fix the useIsCallerAdmin hook to properly fetch and return admin status from the backend isCallerAdmin query. Ensure the hook correctly handles the enabled state based on actor availability and authentication status. The hook should return isLoading: true while the actor is being initialized or the query is fetching, and should only mark isFetched as true once the actor is available and the query has completed. This ensures components wait for a definitive admin status before rendering protected UI."
+        },
+        {
+          "path": "frontend/src/components/BrandHeader.tsx",
+          "operation": "modify",
+          "description": "Fix the admin button visibility logic in both desktop navigation and mobile sheet menu. The admin button should only display when the user is authenticated AND the useIsCallerAdmin hook returns isAdmin: true (not just when loading or undefined). Update the conditional rendering to check both identity existence and the actual isAdmin value from the hook. Ensure the hook is not still loading before showing the button to prevent premature display."
         },
         {
           "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Remove the logic that passes the 'Initialize as Owner' button as customAction to AccessDeniedScreen. Simplify the access denied handling to show only the default AccessDeniedScreen without custom actions, relying on the automatic initialization provided by the authorization component's useActor hook integration."
+          "description": "Add proper admin access verification at the page level using the useIsCallerAdmin hook. Before rendering the admin dashboard content, check if the user is authenticated and if isAdmin is true. If the user is not authenticated, show a message prompting them to log in. If authenticated but not an admin (isAdmin is false after loading completes), redirect to the AccessDeniedScreen or show an appropriate access denied message. Only render the full admin dashboard UI when both authentication and admin status are confirmed. Ensure the loading state is handled to avoid flashing incorrect content."
         },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Add route-level protection for the admin route using a route guard or wrapper component. Before allowing navigation to /admin, verify that the user is authenticated and has admin privileges using the useIsCallerAdmin hook. If the user is not authenticated, redirect to the storefront with a login prompt. If authenticated but not an admin, redirect to the AccessDeniedScreen. This prevents unauthorized users from accessing the admin route even if they manually navigate to the URL."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Fix the frontend admin access verification in useQueries hooks to properly handle the backend isAdmin response",
+      "acceptanceCriteria": [
+        "useIsAdmin hook correctly fetches and returns admin status from backend",
+        "Admin-protected routes properly redirect or show access denied when isAdmin is false",
+        "Admin UI components conditionally render based on actual admin status"
+      ],
+      "file_operations": [
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Review and potentially remove the useInitializeStore mutation hook if it's only used for manual initialization via the removed button. Verify that no other parts of the application depend on this mutation. If it's still needed for other initialization scenarios, keep it but ensure it properly invalidates the admin check queries after successful execution."
+          "description": "Enhance the useIsCallerAdmin hook implementation to include proper loading state management and error handling. The hook should distinguish between: (1) actor not yet initialized (actorFetching: true), (2) query in progress (isLoading: true), (3) query completed successfully (isFetched: true with isAdmin boolean result), and (4) query failed (isError: true). Return a composite loading state that accounts for both actor initialization and query execution. Ensure retry is set to false to prevent unnecessary refetching on auth failures. Add clear return values for isLoading and isFetched that components can reliably use to determine when it's safe to make access control decisions."
         },
         {
           "path": "frontend/src/components/admin/AdminDiagnostics.tsx",
           "operation": "modify",
-          "description": "Update the diagnostics display to better reflect the automatic initialization flow from the authorization component. Add explanatory text that clarifies the expected behavior: authenticated users should automatically become admin on first access. Consider adding a 'Refresh Admin Status' button that re-queries isCallerAdmin and isAdminSystemInitialized to help diagnose state issues without requiring full page refresh."
-        },
-        {
-          "path": "frontend/src/hooks/useActor.ts",
-          "operation": "modify",
-          "description": "Review the automatic admin initialization logic that should be triggered when creating the actor with authentication. Ensure that the initialization is properly awaited and that dependent queries (admin status, system initialized) are invalidated after the initialization completes. Verify the component's usage instructions are being followed correctly: the first authenticated user should automatically receive admin role without requiring manual initialization calls."
+          "description": "Update the diagnostic display to show the current state of the useIsCallerAdmin hook, including isLoading, isFetched, isAdmin value, and any error states. Add diagnostic information about the actor initialization status and authentication status. This will help developers and users understand exactly what's happening during the admin authentication flow and identify where any failures occur. Display clear status badges for each state (loading, fetched, admin status, errors) to make troubleshooting easier."
         }
       ]
     }

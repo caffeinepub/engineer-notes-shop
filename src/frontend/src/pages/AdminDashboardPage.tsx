@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useIsCallerAdmin, useGetAdminProducts, useCreateProduct, useUpdateProduct, useDeleteProduct, useSetProductPublished, useUploadProductFile, useGetCategories, useIsAdminSystemInitialized, useGetCallerUserProfile, useInitializeStore } from '../hooks/useQueries';
 import AccessDeniedScreen from '../components/AccessDeniedScreen';
@@ -14,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LayoutDashboard, Plus, Edit, Trash2, Loader2, Eye, EyeOff, AlertCircle, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, Plus, Edit, Trash2, Loader2, Eye, EyeOff, AlertCircle, RefreshCw, LogIn } from 'lucide-react';
 import { toast } from 'sonner';
 import { ExternalBlob } from '../backend';
 import type { Product } from '../backend';
@@ -27,9 +28,10 @@ interface UploadState {
 }
 
 export default function AdminDashboardPage() {
+  const navigate = useNavigate();
   const { identity } = useInternetIdentity();
   const { data: userProfile, isLoading: profileLoading } = useGetCallerUserProfile();
-  const { data: isAdmin, isLoading: adminLoading, isError: adminError, error: adminErrorObj, refetch: refetchAdmin } = useIsCallerAdmin();
+  const { data: isAdmin, isLoading: adminLoading, isFetched: adminFetched, isError: adminError, error: adminErrorObj, refetch: refetchAdmin } = useIsCallerAdmin();
   const { data: products, isLoading: productsLoading, isError: productsError, error: productsErrorObj, refetch: refetchProducts } = useGetAdminProducts();
   const { data: categories, isLoading: categoriesLoading } = useGetCategories();
   const { data: isAdminSystemInitialized, isLoading: adminSystemInitLoading, isError: adminSystemInitError, error: adminSystemInitErrorObj, refetch: refetchAdminSystemInit } = useIsAdminSystemInitialized();
@@ -99,18 +101,61 @@ export default function AdminDashboardPage() {
     }
   };
 
-  // Show access denied if not admin (after loading completes)
-  if (!adminLoading && !adminError && isAdmin === false) {
-    return <AccessDeniedScreen />;
+  // Show login prompt if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="page-container section-spacing">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+          <LogIn className="h-12 w-12 text-muted-foreground" />
+          <h2 className="text-2xl font-semibold">Authentication Required</h2>
+          <p className="text-muted-foreground text-center max-w-md">
+            Please sign in with Internet Identity to access the admin dashboard.
+          </p>
+          <Button onClick={() => navigate({ to: '/' })}>
+            Go to Storefront
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   // Show loading state while checking admin status
-  if (adminLoading || !identity) {
+  if (!adminFetched || adminLoading) {
     return (
       <div className="page-container section-spacing">
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p className="text-muted-foreground">Verifying admin access...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show access denied if not admin (after loading completes and query is fetched)
+  if (adminFetched && !adminLoading && isAdmin === false) {
+    return <AccessDeniedScreen />;
+  }
+
+  // Show error state if admin check failed
+  if (adminError) {
+    return (
+      <div className="page-container section-spacing">
+        <Alert variant="destructive" className="max-w-2xl mx-auto">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Admin Access Check Failed</AlertTitle>
+          <AlertDescription className="flex flex-col gap-4">
+            <p>{adminErrorMessage || 'Could not verify admin access. Please try again.'}</p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => refetchAdmin()}>
+                <RefreshCw className="h-3 w-3 mr-2" />
+                Retry
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => navigate({ to: '/' })}>
+                Go to Storefront
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }
@@ -477,6 +522,18 @@ export default function AdminDashboardPage() {
               />
             </div>
             <div>
+              <Label htmlFor="price">Price (cents)</Label>
+              <Input
+                id="price"
+                type="number"
+                value={formData.priceInCents}
+                onChange={(e) =>
+                  setFormData({ ...formData, priceInCents: e.target.value })
+                }
+                placeholder="999"
+              />
+            </div>
+            <div>
               <Label htmlFor="category">Category</Label>
               <Select
                 value={formData.categoryId}
@@ -496,18 +553,6 @@ export default function AdminDashboardPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="price">Price (in cents)</Label>
-              <Input
-                id="price"
-                type="number"
-                value={formData.priceInCents}
-                onChange={(e) =>
-                  setFormData({ ...formData, priceInCents: e.target.value })
-                }
-                placeholder="999"
-              />
-            </div>
           </div>
           <DialogFooter>
             <Button
@@ -522,12 +567,12 @@ export default function AdminDashboardPage() {
             <Button
               onClick={handleCreateProduct}
               disabled={
-                createProduct.isPending ||
                 !formData.id ||
                 !formData.title ||
                 !formData.author ||
                 !formData.priceInCents ||
-                !formData.categoryId
+                !formData.categoryId ||
+                createProduct.isPending
               }
             >
               {createProduct.isPending && (
@@ -559,7 +604,12 @@ export default function AdminDashboardPage() {
           <div className="space-y-4">
             <div>
               <Label htmlFor="edit-id">Product ID</Label>
-              <Input id="edit-id" value={formData.id} disabled />
+              <Input
+                id="edit-id"
+                value={formData.id}
+                disabled
+                className="bg-muted"
+              />
             </div>
             <div>
               <Label htmlFor="edit-title">Title</Label>
@@ -569,6 +619,7 @@ export default function AdminDashboardPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
+                placeholder="Product Title"
               />
             </div>
             <div>
@@ -579,6 +630,19 @@ export default function AdminDashboardPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, author: e.target.value })
                 }
+                placeholder="Author Name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-price">Price (cents)</Label>
+              <Input
+                id="edit-price"
+                type="number"
+                value={formData.priceInCents}
+                onChange={(e) =>
+                  setFormData({ ...formData, priceInCents: e.target.value })
+                }
+                placeholder="999"
               />
             </div>
             <div>
@@ -601,17 +665,6 @@ export default function AdminDashboardPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="edit-price">Price (in cents)</Label>
-              <Input
-                id="edit-price"
-                type="number"
-                value={formData.priceInCents}
-                onChange={(e) =>
-                  setFormData({ ...formData, priceInCents: e.target.value })
-                }
-              />
-            </div>
           </div>
           <DialogFooter>
             <Button
@@ -626,11 +679,11 @@ export default function AdminDashboardPage() {
             <Button
               onClick={handleUpdateProduct}
               disabled={
-                updateProduct.isPending ||
                 !formData.title ||
                 !formData.author ||
                 !formData.priceInCents ||
-                !formData.categoryId
+                !formData.categoryId ||
+                updateProduct.isPending
               }
             >
               {updateProduct.isPending && (
@@ -661,7 +714,6 @@ export default function AdminDashboardPage() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteProduct}
-              disabled={deleteProduct.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleteProduct.isPending && (

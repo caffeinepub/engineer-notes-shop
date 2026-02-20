@@ -2,13 +2,33 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-remove-or-fix-the-initialize-as-owner-button-functionality-since-auto-initialization-should-handle-owner-assignment-automatically",
-      "featureTitle": "Remove or fix the 'Initialize as Owner' button functionality since auto-initialization should handle owner assignment automatically",
+      "featureId": "feature-fix-admin-authentication-so-that-users-who-see-the-admin-menu-option-can-successfully-access-the-admin-dashboard-the-admin-option-is-visible-in-the-menu-as-shown-in-screenshots-of-the-live-version-but-clicking-it-does-not-grant-access-to-admin-features",
+      "featureTitle": "Fix admin authentication so that users who see the Admin menu option can successfully access the admin dashboard. The Admin option is visible in the menu (as shown in screenshots of the live version) but clicking it does not grant access to admin features.",
       "files": [
-        "frontend/src/components/AccessDeniedScreen.tsx",
-        "frontend/src/components/admin/AdminDiagnostics.tsx",
+        "frontend/src/components/BrandHeader.tsx",
         "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/AdminDashboardPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-fix-the-frontend-admin-access-verification-in-usequeries-hooks-to-properly-handle-the-backend-isadmin-response-ensure-the-admin-check-query-correctly-reflects-the-user-s-admin-status-and-updates-the-ui-accordingly",
+      "featureTitle": "Fix the frontend admin access verification in useQueries hooks to properly handle the backend isAdmin response. Ensure the admin check query correctly reflects the user's admin status and updates the UI accordingly.",
+      "files": [
+        "frontend/src/components/admin/AdminDiagnostics.tsx",
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "authorization@4.0.0",

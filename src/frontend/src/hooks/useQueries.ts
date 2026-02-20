@@ -56,13 +56,15 @@ export function useIsCallerAdmin() {
       return actor.isCallerAdmin();
     },
     enabled: !!actor && !actorFetching,
-    retry: 1,
+    retry: false, // Don't retry on auth failures
     staleTime: 0, // Always refetch to ensure fresh admin status
   });
 
+  // Return composite loading state that properly reflects both actor and query status
   return {
     ...query,
     isLoading: actorFetching || query.isLoading,
+    isFetched: !!actor && !actorFetching && query.isFetched,
   };
 }
 

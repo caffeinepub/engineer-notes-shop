@@ -3,7 +3,7 @@
  * Detects version mismatches and triggers a one-time reload to stabilize on the latest build.
  */
 
-const CURRENT_BUILD_VERSION = '26';
+const CURRENT_BUILD_VERSION = '27';
 const STORAGE_KEY = 'app_build_version';
 const RELOAD_FLAG_KEY = 'app_build_reload_attempted';
 

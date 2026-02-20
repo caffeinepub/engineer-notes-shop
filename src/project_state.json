@@ -1,16 +1,30 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
-  "architectural_notes": [],
+  "summary": "Book library web app with Internet Identity authentication. Admin functionality exists but authentication is not working - users can see admin option but cannot access admin features. Need to fix admin authentication to allow access to product/category management.",
+  "architectural_notes": [
+    "Admin option is visible in UI but authentication is failing",
+    "Internet Identity integration present but admin role verification not working",
+    "Backend admin principal registration or verification needs investigation"
+  ],
   "known_issues": [
-    "Owner access issue: Principal not recognized as admin after initialization despite authenticated state. Backend owner initialization or admin check logic may have mismatch with frontend."
+    "Admin authentication not working - users can see admin menu option but cannot access admin features",
+    "Admin principal may not be registered correctly in backend",
+    "Multiple deployments (drafts 39-41) have not resolved the admin access issue"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-remove-or-fix-the-initialize-as-owner-button-functionality-since-auto-initialization-should-handle-owner-assignment-automatically",
-      "title": "Remove or fix the 'Initialize as Owner' button functionality since auto-initialization should handle owner assignment automatically",
+      "id": "feature-fix-admin-authentication-so-that-users-who-see-the-admin-menu-option-can-successfully-access-the-admin-dashboard-the-admin-option-is-visible-in-the-menu-as-shown-in-screenshots-of-the-live-version-but-clicking-it-does-not-grant-access-to-admin-features",
+      "title": "Fix admin authentication so that users who see the Admin menu option can successfully access the admin dashboard. The Admin option is visible in the menu (as shown in screenshots of the live version) but clicking it does not grant access to admin features.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-frontend-admin-access-verification-in-usequeries-hooks-to-properly-handle-the-backend-isadmin-response-ensure-the-admin-check-query-correctly-reflects-the-user-s-admin-status-and-updates-the-ui-accordingly",
+      "title": "Fix the frontend admin access verification in useQueries hooks to properly handle the backend isAdmin response. Ensure the admin check query correctly reflects the user's admin status and updates the UI accordingly.",
       "reqIds": [
         "REQ-3"
       ],
@@ -19,16 +33,8 @@
   ],
   "new_feature_requests": [
     {
-      "id": "AR-1",
-      "summary": "Fix the backend admin check logic so that the authenticated principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' is correctly recognized as admin after system initialization",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "status": "pending"
-    },
-    {
       "id": "AR-2",
-      "summary": "Verify that the auto-initialization logic correctly assigns the first authenticated user as admin and persists this assignment across canister upgrades",
+      "summary": "Verify and fix the backend admin principal registration system. The current authenticated user's Internet Identity principal must be correctly registered as an admin in the backend so that the isAdmin check returns true.",
       "reqIds": [
         "REQ-2"
       ],

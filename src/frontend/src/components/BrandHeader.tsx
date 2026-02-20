@@ -26,7 +26,7 @@ import { useState } from 'react';
 export default function BrandHeader() {
   const navigate = useNavigate();
   const { identity } = useInternetIdentity();
-  const { data: isAdmin, isLoading: adminLoading, isError: adminError } = useIsCallerAdmin();
+  const { data: isAdmin, isLoading: adminLoading, isFetched: adminFetched, isError: adminError } = useIsCallerAdmin();
   const { data: categories } = useGetCategories();
   const isAuthenticated = !!identity;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,31 +39,12 @@ export default function BrandHeader() {
   const renderAdminButton = () => {
     if (!isAuthenticated) return null;
 
-    // Still checking admin status
-    if (adminLoading) {
-      return (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled
-                className="hidden sm:inline-flex"
-              >
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Admin
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Checking permissions...</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      );
+    // Still checking admin status - don't show button yet
+    if (!adminFetched || adminLoading) {
+      return null;
     }
 
-    // Admin check error
+    // Admin check error - show error state
     if (adminError) {
       return (
         <TooltipProvider>
@@ -87,31 +68,12 @@ export default function BrandHeader() {
       );
     }
 
-    // Not an admin
+    // Not an admin - hide the button completely
     if (isAdmin === false) {
-      return (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate({ to: '/admin' })}
-                className="hidden sm:inline-flex opacity-50"
-              >
-                <LayoutDashboard className="h-4 w-4 mr-2" />
-                Admin
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Not authorized as store owner</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      );
+      return null;
     }
 
-    // Is admin
+    // Is admin - show active button
     if (isAdmin === true) {
       return (
         <Button
@@ -129,62 +91,40 @@ export default function BrandHeader() {
     return null;
   };
 
-  const renderMobileAdminItem = () => {
+  const renderMobileAdminButton = () => {
     if (!isAuthenticated) return null;
 
-    // Still checking
-    if (adminLoading) {
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled
-          className="w-full justify-start"
-        >
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          Admin (Checking...)
-        </Button>
-      );
+    // Still checking admin status - don't show button yet
+    if (!adminFetched || adminLoading) {
+      return null;
     }
 
-    // Admin check error
+    // Admin check error - show error state
     if (adminError) {
       return (
         <Button
           variant="ghost"
-          size="sm"
+          className="justify-start text-destructive"
           onClick={() => handleNavigation('/admin')}
-          className="w-full justify-start text-destructive"
         >
           <ShieldAlert className="h-4 w-4 mr-2" />
-          Admin (Check failed)
+          Admin (Error)
         </Button>
       );
     }
 
-    // Not an admin
+    // Not an admin - hide completely
     if (isAdmin === false) {
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => handleNavigation('/admin')}
-          className="w-full justify-start opacity-50"
-        >
-          <LayoutDashboard className="h-4 w-4 mr-2" />
-          Admin (Not authorized)
-        </Button>
-      );
+      return null;
     }
 
-    // Is admin
+    // Is admin - show active button
     if (isAdmin === true) {
       return (
         <Button
           variant="ghost"
-          size="sm"
+          className="justify-start"
           onClick={() => handleNavigation('/admin')}
-          className="w-full justify-start"
         >
           <LayoutDashboard className="h-4 w-4 mr-2" />
           Admin
@@ -197,183 +137,146 @@ export default function BrandHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="page-container">
-        <div className="flex h-16 items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-            <img 
-              src="/assets/generated/logo-engineer-notes.dim_512x512.png" 
-              alt="Engineer Notes Shop" 
-              className="h-10 w-10"
-            />
-            <div className="flex flex-col">
-              <span className="font-semibold text-lg leading-none">Engineer Notes</span>
-              <span className="text-xs text-muted-foreground">Technical Resources</span>
-            </div>
-          </Link>
+      <div className="page-container flex h-16 items-center justify-between">
+        {/* Logo */}
+        <Link to="/" className="flex items-center space-x-2">
+          <img 
+            src="/assets/generated/logo-engineer-notes.dim_512x512.png" 
+            alt="Engineer Notes" 
+            className="h-8 w-8"
+          />
+          <span className="font-bold text-xl">Engineer Notes</span>
+        </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden sm:flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate({ to: '/' })}
-            >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Storefront
-            </Button>
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex items-center space-x-1">
+          <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/' })}>
+            <BookOpen className="h-4 w-4 mr-2" />
+            Storefront
+          </Button>
 
+          {/* Categories Dropdown */}
+          {categories && categories.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
                   Categories
-                  <ChevronDown className="h-4 w-4 ml-2" />
+                  <ChevronDown className="h-4 w-4 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="start" className="w-48">
                 <DropdownMenuLabel>Browse by Category</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {categories && categories.length > 0 ? (
-                  categories.map((category) => (
-                    <DropdownMenuItem
-                      key={category.id}
-                      onClick={() => navigate({ to: `/category/${category.id}` })}
-                    >
-                      <span className="mr-2">{category.icon}</span>
-                      {category.name}
-                    </DropdownMenuItem>
-                  ))
-                ) : (
-                  <DropdownMenuItem disabled>No categories available</DropdownMenuItem>
-                )}
+                {categories.map((category) => (
+                  <DropdownMenuItem
+                    key={category.id}
+                    onClick={() => navigate({ to: `/category/${category.id}` })}
+                  >
+                    <span className="mr-2">{category.icon}</span>
+                    {category.name}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
+          )}
 
-            {isAuthenticated && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate({ to: '/library' })}
-              >
-                <Library className="h-4 w-4 mr-2" />
-                My Library
+          {isAuthenticated && (
+            <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/library' })}>
+              <Library className="h-4 w-4 mr-2" />
+              My Library
+            </Button>
+          )}
+
+          <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/about' })}>
+            <Info className="h-4 w-4 mr-2" />
+            About
+          </Button>
+
+          <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/contact' })}>
+            <Mail className="h-4 w-4 mr-2" />
+            Contact
+          </Button>
+
+          {renderAdminButton()}
+        </nav>
+
+        {/* Right side actions */}
+        <div className="flex items-center space-x-2">
+          <LoginButton />
+
+          {/* Mobile Menu */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
               </Button>
-            )}
-
-            {renderAdminButton()}
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate({ to: '/about' })}
-            >
-              <Info className="h-4 w-4 mr-2" />
-              About
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate({ to: '/contact' })}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              Contact
-            </Button>
-
-            <Separator orientation="vertical" className="h-6 mx-2" />
-
-            <LoginButton />
-          </nav>
-
-          {/* Mobile Navigation */}
-          <div className="sm:hidden">
-            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Menu className="h-5 w-5" />
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px]">
+              <SheetHeader>
+                <SheetTitle>Menu</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-2 mt-6">
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => handleNavigation('/')}
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Storefront
                 </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[280px]">
-                <SheetHeader>
-                  <SheetTitle>Menu</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col gap-2 mt-6">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleNavigation('/')}
-                    className="w-full justify-start"
-                  >
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Storefront
-                  </Button>
 
-                  <Separator className="my-2" />
-
-                  <div className="text-xs font-semibold text-muted-foreground px-3 py-2">
-                    Categories
-                  </div>
-                  {categories && categories.length > 0 ? (
-                    categories.map((category) => (
+                {categories && categories.length > 0 && (
+                  <>
+                    <Separator className="my-2" />
+                    <p className="text-sm font-medium text-muted-foreground px-2">Categories</p>
+                    {categories.map((category) => (
                       <Button
                         key={category.id}
                         variant="ghost"
-                        size="sm"
+                        className="justify-start pl-6"
                         onClick={() => handleNavigation(`/category/${category.id}`)}
-                        className="w-full justify-start pl-6"
                       >
                         <span className="mr-2">{category.icon}</span>
                         {category.name}
                       </Button>
-                    ))
-                  ) : (
-                    <div className="text-sm text-muted-foreground px-6 py-2">
-                      No categories available
-                    </div>
-                  )}
+                    ))}
+                    <Separator className="my-2" />
+                  </>
+                )}
 
-                  <Separator className="my-2" />
-
-                  {isAuthenticated && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleNavigation('/library')}
-                      className="w-full justify-start"
-                    >
-                      <Library className="h-4 w-4 mr-2" />
-                      My Library
-                    </Button>
-                  )}
-
-                  {renderMobileAdminItem()}
-
+                {isAuthenticated && (
                   <Button
                     variant="ghost"
-                    size="sm"
-                    onClick={() => handleNavigation('/about')}
-                    className="w-full justify-start"
+                    className="justify-start"
+                    onClick={() => handleNavigation('/library')}
                   >
-                    <Info className="h-4 w-4 mr-2" />
-                    About
+                    <Library className="h-4 w-4 mr-2" />
+                    My Library
                   </Button>
+                )}
 
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleNavigation('/contact')}
-                    className="w-full justify-start"
-                  >
-                    <Mail className="h-4 w-4 mr-2" />
-                    Contact
-                  </Button>
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => handleNavigation('/about')}
+                >
+                  <Info className="h-4 w-4 mr-2" />
+                  About
+                </Button>
 
-                  <Separator className="my-2" />
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => handleNavigation('/contact')}
+                >
+                  <Mail className="h-4 w-4 mr-2" />
+                  Contact
+                </Button>
 
-                  <LoginButton variant="mobile" />
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+                {renderMobileAdminButton()}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>

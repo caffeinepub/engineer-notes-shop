@@ -6,9 +6,9 @@ import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Migration "migration";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
-import Migration "migration";
 
 (with migration = Migration.run)
 actor {
@@ -41,19 +41,40 @@ actor {
 
   let categories = Map.empty<Text, Category>();
   let products = Map.empty<Text, Product>();
-  let userProfiles = Map.empty<Principal, UserProfile>();
+  var userProfiles = Map.empty<Principal, UserProfile>();
   let purchases = Map.empty<Principal, Set.Set<Text>>();
+  let adminPersistentState = Map.empty<Principal, Bool>();
   var systemInitialized : Bool = false;
 
+  func isInPersistentAdminList(caller : Principal) : Bool {
+    switch (adminPersistentState.get(caller)) {
+      case (null) { false };
+      case (?isAdmin) { isAdmin };
+    };
+  };
+
+  func isAdminUser(caller : Principal) : Bool {
+    AccessControl.isAdmin(accessControlState, caller) or isInPersistentAdminList(caller);
+  };
+
   func requireAdmin(caller : Principal) {
-    if (not AccessControl.isAdmin(accessControlState, caller)) {
-      Runtime.trap("Unauthorized: Only admins can perform this action");
+    if (not isAdminUser(caller)) {
+      Runtime.trap(
+        "Unauthorized: Only admins can perform this action. Please ensure you are logged in with the Internet Identity you initially used to set up the store",
+      );
     };
   };
 
   func requireAuthenticatedUser(caller : Principal) {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: You must be signed in to perform this action. Please sign in and try again.");
+    if (caller.isAnonymous()) {
+      Runtime.trap(
+        "Unauthorized: You must be signed in to perform this action. Please sign in and try again.",
+      );
+    };
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user) or isAdminUser(caller))) {
+      Runtime.trap(
+        "Unauthorized: You must be signed in to perform this action. Please sign in and try again.",
+      );
     };
   };
 
@@ -63,6 +84,7 @@ actor {
         addDefaultCategories();
       };
       AccessControl.initialize(accessControlState, caller, "", "");
+      adminPersistentState.add(caller, true);
       systemInitialized := true;
     };
   };
@@ -81,6 +103,7 @@ actor {
     };
 
     AccessControl.initialize(accessControlState, caller, "", "");
+    adminPersistentState.add(caller, true);
     systemInitialized := true;
   };
 
@@ -275,7 +298,7 @@ actor {
   public query ({ caller }) func getProduct(productId : Text) : async Product {
     let product = getProductInternal(productId);
 
-    if (not product.isPublished and not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not product.isPublished and not isAdminUser(caller)) {
       Runtime.trap("Product not found");
     };
 
@@ -304,14 +327,16 @@ actor {
     autoInitializeIfNeeded(caller);
     let product = getProductInternal(productId);
 
-    let isAdmin = AccessControl.isAdmin(accessControlState, caller);
+    let isAdmin = isAdminUser(caller);
     let hasPurchased = switch (purchases.get(caller)) {
       case (null) { false };
       case (?userPurchases) { userPurchases.contains(productId) };
     };
 
     if (not isAdmin and not hasPurchased) {
-      Runtime.trap("Unauthorized: You must purchase this product before downloading. Please complete your purchase and try again.");
+      Runtime.trap(
+        "Unauthorized: You must purchase this product before downloading. Please complete your purchase and try again.",
+      );
     };
 
     switch (product.file) {
@@ -362,7 +387,7 @@ actor {
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (not Principal.equal(caller, user) and not AccessControl.isAdmin(accessControlState, caller)) {
+    if (not Principal.equal(caller, user) and not isAdminUser(caller)) {
       Runtime.trap("Unauthorized: You can only view your own profile unless you are an admin.");
     };
     userProfiles.get(user);

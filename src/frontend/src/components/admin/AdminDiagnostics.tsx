@@ -193,6 +193,12 @@ export default function AdminDiagnostics({
             <strong>Expected behavior:</strong> The first authenticated user to access admin features should automatically become the owner. If you're seeing "Not admin" after signing in, try clicking "Refresh Status" above or the "Initialize Admin System" button below.
           </div>
         )}
+
+        {isAuthenticated && adminCheckLoading && (
+          <div className="pt-2 border-t text-xs text-blue-600 dark:text-blue-400">
+            <strong>Status:</strong> Verifying admin access with backend. This should complete within a few seconds.
+          </div>
+        )}
       </CardContent>
     </Card>
   );

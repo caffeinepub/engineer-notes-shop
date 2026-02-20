@@ -1,76 +1,69 @@
 {
   "kind": "build_request",
-  "title": "Fix admin authentication - backend owner recognition issue",
+  "title": "Fix admin authentication to allow access to admin dashboard",
   "projectName": "Engineer Notes Shop",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix the backend admin check logic so that the authenticated principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' is correctly recognized as admin after system initialization",
-      "target": "backend",
+      "text": "Fix admin authentication so that users who see the Admin menu option can successfully access the admin dashboard. The Admin option is visible in the menu (as shown in screenshots of the live version) but clicking it does not grant access to admin features.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-user-1",
-          "msg-assistant-5",
-          "msg-user-6"
+          "msg-user-final"
         ],
         "quotes": [
-          "Admin Check: Not admin ✗",
-          "your principal is not being recognized as the owner"
+          "Yes, admin option was observed but not authenticated, this is the screen shot of live tab"
         ]
       },
       "acceptanceCriteria": [
-        "After refresh, the Admin Diagnostics panel shows 'Admin Check: Admin ✓' instead of 'Not admin ✗'",
-        "The authenticated user with principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' can access the admin dashboard",
-        "The 'Access Denied' screen no longer appears for the initialized owner"
+        "User with admin privileges can click the Admin menu option and successfully access the admin dashboard",
+        "Admin dashboard displays product management interface with CRUD operations",
+        "No authentication errors or access denied messages when admin user navigates to admin pages"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Verify that the auto-initialization logic correctly assigns the first authenticated user as admin and persists this assignment across canister upgrades",
+      "text": "Verify and fix the backend admin principal registration system. The current authenticated user's Internet Identity principal must be correctly registered as an admin in the backend so that the isAdmin check returns true.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-assistant-5"
-        ],
-        "quotes": [
-          "The initialization call isn't properly setting your principal as owner"
+          "msg-user-final"
         ]
       },
       "acceptanceCriteria": [
-        "When an authenticated user accesses the system for the first time, they are automatically assigned admin privileges",
-        "The admin assignment persists after canister restart or upgrade",
-        "The isAdmin check returns true for the initialized owner principal"
+        "Backend correctly stores and recognizes the first authenticated user as admin (auto-initialization)",
+        "isAdmin() backend query returns true for the registered admin principal",
+        "Admin access checks work consistently across all admin-protected endpoints"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Remove or fix the 'Initialize as Owner' button functionality since auto-initialization should handle owner assignment automatically",
+      "text": "Fix the frontend admin access verification in useQueries hooks to properly handle the backend isAdmin response. Ensure the admin check query correctly reflects the user's admin status and updates the UI accordingly.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-assistant-5"
-        ],
-        "quotes": [
-          "The 'Initialize as Owner' button suggests the backend is waiting for manual initialization, but clicking it hasn't worked"
+          "msg-user-final"
         ]
       },
       "acceptanceCriteria": [
-        "If auto-initialization works correctly, remove the 'Initialize as Owner' button from the AccessDeniedScreen",
-        "If the button is kept, ensure it properly triggers the backend initialization and updates the UI state immediately",
-        "The user experience is clear and doesn't show conflicting states (Initialized ✓ but Not admin ✗)"
+        "useIsAdmin hook correctly fetches and returns admin status from backend",
+        "Admin-protected routes properly redirect or show access denied when isAdmin is false",
+        "Admin UI components conditionally render based on actual admin status"
       ]
     }
   ],
   "constraints": [
-    "The authenticated principal 'hmeax-fs32k-burgh-dx5q3-cud51-d77j7-y6kwa-fl2po-zzjpj-c74c2-rae' must be recognized as admin",
-    "Preserve the single-actor architecture in backend/main.mo",
-    "Do not modify the authentication flow or Internet Identity integration"
+    "Must maintain single-actor backend architecture",
+    "Must preserve Internet Identity authentication flow",
+    "Must not modify frontend/src/hooks/useInternetIdentity.ts",
+    "Must not modify frontend/src/hooks/useActor.ts"
   ],
   "nonGoals": [
-    "Adding multi-admin support or role-based access control beyond owner/non-owner",
-    "Changing the frontend UI design or layout",
-    "Modifying the product management features"
+    "Changing the UI design or layout of admin pages",
+    "Adding new admin features beyond fixing authentication",
+    "Modifying category or product management functionality",
+    "Changing the menu structure or navigation"
   ],
   "imageRequirements": {
     "required": [],
