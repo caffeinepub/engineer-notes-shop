@@ -6,11 +6,10 @@ import Array "mo:core/Array";
 import Text "mo:core/Text";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import Migration "migration";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
+import Iter "mo:core/Iter";
 
-(with migration = Migration.run)
 actor {
   include MixinStorage();
 
@@ -246,6 +245,11 @@ actor {
     requireAdmin(caller);
 
     let product = getProductInternal(id);
+
+    if (isPublished and product.priceInCents == 0) {
+      Runtime.trap("Product must have a valid price greater than 0 to be published");
+    };
+
     let updatedProduct : Product = {
       id = product.id;
       title = product.title;
@@ -314,11 +318,16 @@ actor {
   public query ({ caller }) func listStorefrontProductsByCategory(
     categoryId : Text,
   ) : async ProductList {
-    Array.fromIter(products.values()).filter<Product>(
-      func(product) {
-        product.isPublished and product.category == categoryId;
-      }
+    let filteredIterator = products.values().filter(
+      func(product) { product.isPublished and product.category == categoryId }
     );
+
+    Array.fromIter(filteredIterator);
+  };
+
+  public query ({ caller }) func getAllProducts() : async [Product] {
+    requireAdmin(caller);
+    Array.fromIter(products.values());
   };
 
   public shared ({ caller }) func downloadProductFile(

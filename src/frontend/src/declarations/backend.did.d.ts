@@ -63,6 +63,7 @@ export interface _SERVICE {
   'deleteCategory' : ActorMethod<[string], undefined>,
   'deleteProduct' : ActorMethod<[string], undefined>,
   'downloadProductFile' : ActorMethod<[string], ExternalBlob>,
+  'getAllProducts' : ActorMethod<[], Array<Product>>,
   'getAllUserProfiles' : ActorMethod<[], Array<[Principal, UserProfile]>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,

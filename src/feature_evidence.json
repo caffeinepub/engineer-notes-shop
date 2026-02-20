@@ -2,11 +2,9 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-fix-admin-authentication-so-that-users-who-see-the-admin-menu-option-can-successfully-access-the-admin-dashboard-the-admin-option-is-visible-in-the-menu-as-shown-in-screenshots-of-the-live-version-but-clicking-it-does-not-grant-access-to-admin-features",
-      "featureTitle": "Fix admin authentication so that users who see the Admin menu option can successfully access the admin dashboard. The Admin option is visible in the menu (as shown in screenshots of the live version) but clicking it does not grant access to admin features.",
+      "featureId": "feature-update-the-admin-dashboard-to-display-product-price-and-show-validation-warnings-if-price-is-missing-or-invalid-before-publishing",
+      "featureTitle": "Update the admin dashboard to display product price and show validation warnings if price is missing or invalid before publishing",
       "files": [
-        "frontend/src/components/BrandHeader.tsx",
-        "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/AdminDashboardPage.tsx"
       ],
       "components": [
@@ -19,16 +17,15 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-1"
+        "REQ-4"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-fix-the-frontend-admin-access-verification-in-usequeries-hooks-to-properly-handle-the-backend-isadmin-response-ensure-the-admin-check-query-correctly-reflects-the-user-s-admin-status-and-updates-the-ui-accordingly",
-      "featureTitle": "Fix the frontend admin access verification in useQueries hooks to properly handle the backend isAdmin response. Ensure the admin check query correctly reflects the user's admin status and updates the UI accordingly.",
+      "featureId": "feature-add-admin-ui-functionality-to-edit-product-price-and-purchase-options-before-publishing",
+      "featureTitle": "Add admin UI functionality to edit product price and purchase options before publishing",
       "files": [
-        "frontend/src/components/admin/AdminDiagnostics.tsx",
-        "frontend/src/hooks/useQueries.ts"
+        "frontend/src/pages/AdminDashboardPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -40,7 +37,28 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-3"
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-investigate-and-fix-the-specific-case-where-the-one-uploaded-product-is-not-appearing-in-category-listings-despite-being-visible-in-admin-dashboard",
+      "featureTitle": "Investigate and fix the specific case where the one uploaded product is not appearing in category listings despite being visible in admin dashboard",
+      "files": [
+        "frontend/src/pages/CategoryStorefrontPage.tsx",
+        "frontend/src/pages/StorefrontPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
       ],
       "confidence": "high"
     }

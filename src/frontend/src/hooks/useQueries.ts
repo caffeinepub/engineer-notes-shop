@@ -170,6 +170,8 @@ export function useGetStorefrontProductsByCategory(categoryId: string) {
       return actor.listStorefrontProductsByCategory(categoryId);
     },
     enabled: !!actor && !isFetching && !!categoryId,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 }
 
@@ -226,6 +228,7 @@ export function useCreateProduct() {
       );
     },
     onSuccess: () => {
+      // Invalidate all product queries including category-specific ones
       queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
       queryClient.invalidateQueries({ queryKey: ['storefrontProducts'] });
       queryClient.invalidateQueries({ queryKey: ['isCallerAdmin'] });
@@ -256,6 +259,7 @@ export function useUpdateProduct() {
       );
     },
     onSuccess: () => {
+      // Invalidate all product queries including category-specific ones
       queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
       queryClient.invalidateQueries({ queryKey: ['storefrontProducts'] });
       queryClient.invalidateQueries({ queryKey: ['product'] });
@@ -273,6 +277,7 @@ export function useDeleteProduct() {
       await actor.deleteProduct(id);
     },
     onSuccess: () => {
+      // Invalidate all product queries including category-specific ones
       queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
       queryClient.invalidateQueries({ queryKey: ['storefrontProducts'] });
     },
@@ -289,6 +294,7 @@ export function useSetProductPublished() {
       await actor.setProductPublished(params.id, params.isPublished);
     },
     onSuccess: () => {
+      // Invalidate all product-related queries including category-specific ones
       queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
       queryClient.invalidateQueries({ queryKey: ['storefrontProducts'] });
       queryClient.invalidateQueries({ queryKey: ['product'] });
@@ -306,7 +312,9 @@ export function useUploadProductFile() {
       await actor.uploadProductFile(params.id, params.blob);
     },
     onSuccess: () => {
+      // Invalidate all product-related queries including category-specific ones
       queryClient.invalidateQueries({ queryKey: ['adminProducts'] });
+      queryClient.invalidateQueries({ queryKey: ['storefrontProducts'] });
       queryClient.invalidateQueries({ queryKey: ['product'] });
     },
   });

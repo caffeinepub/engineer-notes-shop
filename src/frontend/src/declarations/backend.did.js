@@ -25,12 +25,6 @@ export const UserRole = IDL.Variant({
   'guest' : IDL.Null,
 });
 export const ExternalBlob = IDL.Vec(IDL.Nat8);
-export const UserProfile = IDL.Record({ 'name' : IDL.Text });
-export const Category = IDL.Record({
-  'id' : IDL.Text,
-  'icon' : IDL.Text,
-  'name' : IDL.Text,
-});
 export const Product = IDL.Record({
   'id' : IDL.Text,
   'title' : IDL.Text,
@@ -39,6 +33,12 @@ export const Product = IDL.Record({
   'author' : IDL.Text,
   'category' : IDL.Text,
   'priceInCents' : IDL.Nat,
+});
+export const UserProfile = IDL.Record({ 'name' : IDL.Text });
+export const Category = IDL.Record({
+  'id' : IDL.Text,
+  'icon' : IDL.Text,
+  'name' : IDL.Text,
 });
 export const ProductList = IDL.Vec(Product);
 
@@ -80,6 +80,7 @@ export const idlService = IDL.Service({
   'deleteCategory' : IDL.Func([IDL.Text], [], []),
   'deleteProduct' : IDL.Func([IDL.Text], [], []),
   'downloadProductFile' : IDL.Func([IDL.Text], [ExternalBlob], []),
+  'getAllProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
   'getAllUserProfiles' : IDL.Func(
       [],
       [IDL.Vec(IDL.Tuple(IDL.Principal, UserProfile))],
@@ -137,12 +138,6 @@ export const idlFactory = ({ IDL }) => {
     'guest' : IDL.Null,
   });
   const ExternalBlob = IDL.Vec(IDL.Nat8);
-  const UserProfile = IDL.Record({ 'name' : IDL.Text });
-  const Category = IDL.Record({
-    'id' : IDL.Text,
-    'icon' : IDL.Text,
-    'name' : IDL.Text,
-  });
   const Product = IDL.Record({
     'id' : IDL.Text,
     'title' : IDL.Text,
@@ -151,6 +146,12 @@ export const idlFactory = ({ IDL }) => {
     'author' : IDL.Text,
     'category' : IDL.Text,
     'priceInCents' : IDL.Nat,
+  });
+  const UserProfile = IDL.Record({ 'name' : IDL.Text });
+  const Category = IDL.Record({
+    'id' : IDL.Text,
+    'icon' : IDL.Text,
+    'name' : IDL.Text,
   });
   const ProductList = IDL.Vec(Product);
   
@@ -192,6 +193,7 @@ export const idlFactory = ({ IDL }) => {
     'deleteCategory' : IDL.Func([IDL.Text], [], []),
     'deleteProduct' : IDL.Func([IDL.Text], [], []),
     'downloadProductFile' : IDL.Func([IDL.Text], [ExternalBlob], []),
+    'getAllProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
     'getAllUserProfiles' : IDL.Func(
         [],
         [IDL.Vec(IDL.Tuple(IDL.Principal, UserProfile))],

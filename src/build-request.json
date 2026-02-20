@@ -1,69 +1,128 @@
 {
   "kind": "build_request",
-  "title": "Fix admin authentication to allow access to admin dashboard",
-  "projectName": "Engineer Notes Shop",
+  "title": "Fix product visibility in category section and storefront",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Fix admin authentication so that users who see the Admin menu option can successfully access the admin dashboard. The Admin option is visible in the menu (as shown in screenshots of the live version) but clicking it does not grant access to admin features.",
-      "target": "both",
+      "text": "Fix the backend getProductsByCategory function to ensure all published products are returned and included in the category listings",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-user-final"
+          "msg-user-latest"
         ],
         "quotes": [
-          "Yes, admin option was observed but not authenticated, this is the screen shot of live tab"
+          "admin dashboard is showing one product uploaded, but it is not available in category section"
         ]
       },
       "acceptanceCriteria": [
-        "User with admin privileges can click the Admin menu option and successfully access the admin dashboard",
-        "Admin dashboard displays product management interface with CRUD operations",
-        "No authentication errors or access denied messages when admin user navigates to admin pages"
+        "Products that appear in admin dashboard are returned by getProductsByCategory when published",
+        "Products with valid category assignments appear in their respective category listings",
+        "Both draft and live pages show the same products when published"
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Verify and fix the backend admin principal registration system. The current authenticated user's Internet Identity principal must be correctly registered as an admin in the backend so that the isAdmin check returns true.",
+      "text": "Verify and fix the product publish/unpublish logic to ensure published products are visible in storefront queries",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-user-final"
+          "msg-user-latest"
+        ],
+        "quotes": [
+          "it is not available in category section of draft and live page"
         ]
       },
       "acceptanceCriteria": [
-        "Backend correctly stores and recognizes the first authenticated user as admin (auto-initialization)",
-        "isAdmin() backend query returns true for the registered admin principal",
-        "Admin access checks work consistently across all admin-protected endpoints"
+        "Published products immediately appear in category listings",
+        "Unpublished products are hidden from storefront but visible in admin dashboard",
+        "The isPublished flag is correctly checked in all storefront queries"
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Fix the frontend admin access verification in useQueries hooks to properly handle the backend isAdmin response. Ensure the admin check query correctly reflects the user's admin status and updates the UI accordingly.",
-      "target": "frontend",
+      "text": "Add validation to ensure products must have a price value set before they can be published and made visible",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-user-final"
+          "msg-user-latest"
+        ],
+        "quotes": [
+          "price of product and purchase options need to be updated"
         ]
       },
       "acceptanceCriteria": [
-        "useIsAdmin hook correctly fetches and returns admin status from backend",
-        "Admin-protected routes properly redirect or show access denied when isAdmin is false",
-        "Admin UI components conditionally render based on actual admin status"
+        "Products without a price cannot be published",
+        "Admin dashboard shows clear validation error when attempting to publish a product without a price",
+        "Products with price set to zero or null are treated as invalid"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Update the admin dashboard to display product price and show validation warnings if price is missing or invalid before publishing",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-latest"
+        ],
+        "quotes": [
+          "price of product and purchase options need to be updated"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin dashboard displays the current price for each product",
+        "Warning badge appears on products without valid prices",
+        "Publish button is disabled or shows warning for products without prices"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Add admin UI functionality to edit product price and purchase options before publishing",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-latest"
+        ],
+        "quotes": [
+          "price of product and purchase options need to be updated"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin can set or update product price through the dashboard",
+        "Price input validates numeric values and prevents invalid entries",
+        "Changes to price are immediately reflected in the product data"
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Investigate and fix the specific case where the one uploaded product is not appearing in category listings despite being visible in admin dashboard",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-user-latest"
+        ],
+        "quotes": [
+          "admin dashboard is showing one product uploaded, but it is not available in category section"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The specific uploaded product appears in its assigned category on both draft and live pages",
+        "Product data consistency is verified between admin view and public storefront",
+        "Query cache invalidation works correctly after product updates"
       ]
     }
   ],
   "constraints": [
-    "Must maintain single-actor backend architecture",
-    "Must preserve Internet Identity authentication flow",
-    "Must not modify frontend/src/hooks/useInternetIdentity.ts",
-    "Must not modify frontend/src/hooks/useActor.ts"
+    "Maintain existing payment integration architecture",
+    "Do not modify the Internet Identity authentication system",
+    "Preserve existing admin authorization checks",
+    "Keep the current product data structure compatible with existing purchases"
   ],
   "nonGoals": [
-    "Changing the UI design or layout of admin pages",
-    "Adding new admin features beyond fixing authentication",
-    "Modifying category or product management functionality",
-    "Changing the menu structure or navigation"
+    "Implementing new payment gateway providers",
+    "Redesigning the admin dashboard layout",
+    "Adding bulk product import functionality",
+    "Changing the category structure or hierarchy"
   ],
   "imageRequirements": {
     "required": [],

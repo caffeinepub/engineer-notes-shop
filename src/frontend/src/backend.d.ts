@@ -44,6 +44,7 @@ export interface backendInterface {
     deleteCategory(id: string): Promise<void>;
     deleteProduct(id: string): Promise<void>;
     downloadProductFile(productId: string): Promise<ExternalBlob>;
+    getAllProducts(): Promise<Array<Product>>;
     getAllUserProfiles(): Promise<Array<[Principal, UserProfile]>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;

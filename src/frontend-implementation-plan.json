@@ -1,57 +1,68 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix admin authentication to allow access to admin dashboard",
+  "title": "Fix product visibility in category section and storefront",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Fix admin authentication so that users who see the Admin menu option can successfully access the admin dashboard",
+      "id": "REQ-4",
+      "summary": "Update the admin dashboard to display product price and show validation warnings if price is missing or invalid before publishing",
       "acceptanceCriteria": [
-        "User with admin privileges can click the Admin menu option and successfully access the admin dashboard",
-        "Admin dashboard displays product management interface with CRUD operations",
-        "No authentication errors or access denied messages when admin user navigates to admin pages"
+        "Admin dashboard displays the current price for each product",
+        "Warning badge appears on products without valid prices",
+        "Publish button is disabled or shows warning for products without prices"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Fix the useIsCallerAdmin hook to properly fetch and return admin status from the backend isCallerAdmin query. Ensure the hook correctly handles the enabled state based on actor availability and authentication status. The hook should return isLoading: true while the actor is being initialized or the query is fetching, and should only mark isFetched as true once the actor is available and the query has completed. This ensures components wait for a definitive admin status before rendering protected UI."
-        },
-        {
-          "path": "frontend/src/components/BrandHeader.tsx",
-          "operation": "modify",
-          "description": "Fix the admin button visibility logic in both desktop navigation and mobile sheet menu. The admin button should only display when the user is authenticated AND the useIsCallerAdmin hook returns isAdmin: true (not just when loading or undefined). Update the conditional rendering to check both identity existence and the actual isAdmin value from the hook. Ensure the hook is not still loading before showing the button to prevent premature display."
-        },
-        {
           "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Add proper admin access verification at the page level using the useIsCallerAdmin hook. Before rendering the admin dashboard content, check if the user is authenticated and if isAdmin is true. If the user is not authenticated, show a message prompting them to log in. If authenticated but not an admin (isAdmin is false after loading completes), redirect to the AccessDeniedScreen or show an appropriate access denied message. Only render the full admin dashboard UI when both authentication and admin status are confirmed. Ensure the loading state is handled to avoid flashing incorrect content."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Add route-level protection for the admin route using a route guard or wrapper component. Before allowing navigation to /admin, verify that the user is authenticated and has admin privileges using the useIsCallerAdmin hook. If the user is not authenticated, redirect to the storefront with a login prompt. If authenticated but not an admin, redirect to the AccessDeniedScreen. This prevents unauthorized users from accessing the admin route even if they manually navigate to the URL."
+          "description": "Add price display column to the products table showing formatted price in dollars. Add visual warning badge (amber/yellow) next to products where priceInCents is 0 or missing. Update the publish toggle UI to show a disabled state or warning tooltip when attempting to publish products without valid prices. Include helpful text like 'Set price before publishing' when hovering over disabled publish controls for products with invalid prices."
         }
       ]
     },
     {
-      "id": "REQ-3",
-      "summary": "Fix the frontend admin access verification in useQueries hooks to properly handle the backend isAdmin response",
+      "id": "REQ-5",
+      "summary": "Add admin UI functionality to edit product price and purchase options before publishing",
       "acceptanceCriteria": [
-        "useIsAdmin hook correctly fetches and returns admin status from backend",
-        "Admin-protected routes properly redirect or show access denied when isAdmin is false",
-        "Admin UI components conditionally render based on actual admin status"
+        "Admin can set or update product price through the dashboard",
+        "Price input validates numeric values and prevents invalid entries",
+        "Changes to price are immediately reflected in the product data"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/pages/AdminDashboardPage.tsx",
           "operation": "modify",
-          "description": "Enhance the useIsCallerAdmin hook implementation to include proper loading state management and error handling. The hook should distinguish between: (1) actor not yet initialized (actorFetching: true), (2) query in progress (isLoading: true), (3) query completed successfully (isFetched: true with isAdmin boolean result), and (4) query failed (isError: true). Return a composite loading state that accounts for both actor initialization and query execution. Ensure retry is set to false to prevent unnecessary refetching on auth failures. Add clear return values for isLoading and isFetched that components can reliably use to determine when it's safe to make access control decisions."
+          "description": "Add inline price editing capability to each product row. Include a number input field (or edit button that opens an input) for priceInCents, converting between cents (backend) and dollars (user-facing display). Validate that input is numeric, non-negative, and properly converts decimal dollars to integer cents. Wire up the existing updateProduct mutation from useQueries.ts to save price changes, ensuring the mutation invalidates the products query cache so the UI updates immediately after save."
         },
         {
-          "path": "frontend/src/components/admin/AdminDiagnostics.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Update the diagnostic display to show the current state of the useIsCallerAdmin hook, including isLoading, isFetched, isAdmin value, and any error states. Add diagnostic information about the actor initialization status and authentication status. This will help developers and users understand exactly what's happening during the admin authentication flow and identify where any failures occur. Display clear status badges for each state (loading, fetched, admin status, errors) to make troubleshooting easier."
+          "description": "Verify that the updateProduct mutation properly handles priceInCents parameter and invalidates all relevant query keys (admin products list, storefront products, category products) after successful update to ensure UI consistency across all views."
+        }
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "summary": "Investigate and fix the specific case where the one uploaded product is not appearing in category listings despite being visible in admin dashboard",
+      "acceptanceCriteria": [
+        "The specific uploaded product appears in its assigned category on both draft and live pages",
+        "Product data consistency is verified between admin view and public storefront",
+        "Query cache invalidation works correctly after product updates"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/CategoryStorefrontPage.tsx",
+          "operation": "modify",
+          "description": "Add debug diagnostics panel (similar to existing one) that displays the raw query response from listStorefrontProductsByCategory, showing product count, isPublished status, priceInCents values, and category assignments. Include a manual refresh button that invalidates the category products query cache. Add console logging of the category parameter and returned products array to help diagnose filtering issues. Ensure the query is properly enabled and not being skipped due to authentication state checks."
+        },
+        {
+          "path": "frontend/src/pages/StorefrontPage.tsx",
+          "operation": "modify",
+          "description": "Add similar debug diagnostics for the main storefront products list (listStorefrontProducts query). Display product count, publication status distribution, and any filtering being applied. Include console logging to verify products are being returned from the backend. Add a refresh button that invalidates the storefront products cache to test if stale cache is causing visibility issues."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Review all product-related query cache invalidation logic. Ensure that when setProductPublished, updateProduct, or uploadProductFile mutations succeed, they invalidate all relevant query keys: ['products'], ['allProducts'], ['storefrontProducts'], ['categoryProducts'], and any category-specific keys. Add explicit invalidation for both admin and storefront views. Consider adding refetchOnMount or refetchOnWindowFocus options to category and storefront product queries to reduce stale cache issues."
         }
       ]
     }

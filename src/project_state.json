@@ -1,47 +1,79 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Book library web app with Internet Identity authentication. Admin functionality exists but authentication is not working - users can see admin option but cannot access admin features. Need to fix admin authentication to allow access to product/category management.",
+  "summary": "E-commerce platform with admin dashboard and product management",
   "architectural_notes": [
-    "Admin option is visible in UI but authentication is failing",
-    "Internet Identity integration present but admin role verification not working",
-    "Backend admin principal registration or verification needs investigation"
+    "Product visibility may depend on price/payment configuration"
   ],
   "known_issues": [
-    "Admin authentication not working - users can see admin menu option but cannot access admin features",
-    "Admin principal may not be registered correctly in backend",
-    "Multiple deployments (drafts 39-41) have not resolved the admin access issue"
+    "Products uploaded via admin dashboard not appearing in category section"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-fix-admin-authentication-so-that-users-who-see-the-admin-menu-option-can-successfully-access-the-admin-dashboard-the-admin-option-is-visible-in-the-menu-as-shown-in-screenshots-of-the-live-version-but-clicking-it-does-not-grant-access-to-admin-features",
-      "title": "Fix admin authentication so that users who see the Admin menu option can successfully access the admin dashboard. The Admin option is visible in the menu (as shown in screenshots of the live version) but clicking it does not grant access to admin features.",
+      "id": "feature-update-the-admin-dashboard-to-display-product-price-and-show-validation-warnings-if-price-is-missing-or-invalid-before-publishing",
+      "title": "Update the admin dashboard to display product price and show validation warnings if price is missing or invalid before publishing",
       "reqIds": [
-        "REQ-1"
+        "REQ-4"
       ],
       "version": 1
     },
     {
-      "id": "feature-fix-the-frontend-admin-access-verification-in-usequeries-hooks-to-properly-handle-the-backend-isadmin-response-ensure-the-admin-check-query-correctly-reflects-the-user-s-admin-status-and-updates-the-ui-accordingly",
-      "title": "Fix the frontend admin access verification in useQueries hooks to properly handle the backend isAdmin response. Ensure the admin check query correctly reflects the user's admin status and updates the UI accordingly.",
+      "id": "feature-add-admin-ui-functionality-to-edit-product-price-and-purchase-options-before-publishing",
+      "title": "Add admin UI functionality to edit product price and purchase options before publishing",
       "reqIds": [
-        "REQ-3"
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-investigate-and-fix-the-specific-case-where-the-one-uploaded-product-is-not-appearing-in-category-listings-despite-being-visible-in-admin-dashboard",
+      "title": "Investigate and fix the specific case where the one uploaded product is not appearing in category listings despite being visible in admin dashboard",
+      "reqIds": [
+        "REQ-6"
       ],
       "version": 1
     }
   ],
   "new_feature_requests": [
     {
+      "id": "AR-1",
+      "summary": "Fix product visibility in category section",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
       "id": "AR-2",
-      "summary": "Verify and fix the backend admin principal registration system. The current authenticated user's Internet Identity principal must be correctly registered as an admin in the backend so that the isAdmin check returns true.",
+      "summary": "Integrate payment gateway for product pricing and purchase options",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Fix the backend getProductsByCategory function to ensure all published products are returned and included in the category listings",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Verify and fix the product publish/unpublish logic to ensure published products are visible in storefront queries",
       "reqIds": [
         "REQ-2"
       ],
       "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Add validation to ensure products must have a price value set before they can be published and made visible",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "status": "pending"
     }
   ],
-  "projectName": "Engineer Notes Shop",
+  "projectName": "Fix product visibility in category section and storefront",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }
